@@ -61,7 +61,7 @@ The Mini Data Cloud consists of:
 
 ### Docker Support
 
-Docker Compose is configured but requires Task 2 implementation for full functionality:
+Docker Compose is configured but requires further implementation for full functionality:
 
 ```bash
 # Will start but with limited functionality
