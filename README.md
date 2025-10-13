@@ -1,8 +1,8 @@
 # Mini Data Cloud
 
-A containerized distributed data processing system that teaches core cloud database concepts through hands-on implementation.
+A containerized distributed data processing system that demonstrates core cloud database concepts through hands-on implementation.
 
-## 🎯 Project Goals
+## Project Goals
 
 Build a simplified version of systems like **Databricks**, **Snowflake**, or **Amazon Redshift** to understand:
 
@@ -13,32 +13,32 @@ Build a simplified version of systems like **Databricks**, **Snowflake**, or **A
 - **ACID transactions** and schema evolution
 - **Fault tolerance** and observability in distributed systems
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Control Plane (Java)                     │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐ │
-│  │ API Gateway │ │   Metadata  │ │    Query Planner        │ │
-│  │ Spring Boot │ │   Service   │ │  Apache Calcite         │ │
-│  └─────────────┘ └─────────────┘ └─────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                    Control Plane (Java)                       │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐  │
+│  │ API Gateway │ │   Metadata  │ │    Query Planner        │  │
+│  │ Spring Boot │ │   Service   │ │  Apache Calcite         │  │
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘  │
+└───────────────────────────────────────────────────────────────┘
                               │ gRPC
-┌─────────────────────────────────────────────────────────────┐
-│                    Data Plane (Java)                        │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐ │
-│  │  Worker 1   │ │  Worker 2   │ │      Worker N           │ │
-│  │ Arrow Java  │ │ Arrow Java  │ │    Arrow Java           │ │
-│  └─────────────┘ └─────────────┘ └─────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                    Data Plane (Java)                          │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐  │
+│  │  Worker 1   │ │  Worker 2   │ │      Worker N           │  │
+│  │ Arrow Java  │ │ Arrow Java  │ │    Arrow Java           │  │
+│  └─────────────┘ └─────────────┘ └─────────────────────────┘  │
+└───────────────────────────────────────────────────────────────┘
                               │
-┌─────────────────────────────────────────────────────────────┐
-│                   Storage Layer                             │
-│           Iceberg Tables + Parquet Files                   │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                   Storage Layer                               │
+│           Iceberg Tables + Parquet Files                      │
+└───────────────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -81,7 +81,7 @@ curl -X POST http://localhost:8080/api/v1/queries \
 curl http://localhost:8080/api/v1/queries/{query_id}
 ```
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
@@ -93,36 +93,33 @@ curl http://localhost:8080/api/v1/queries/{query_id}
 | **Orchestration** | Docker + Docker Compose | Container management |
 | **Observability** | Prometheus + OpenTelemetry | Metrics and distributed tracing |
 
-## 📚 Learning Path
+## Development Roadmap
 
-### Phase 1: Single-Node SQL Engine (Weeks 1-2)
-**What you'll learn**: SQL parsing, columnar processing, Parquet I/O
+The system is designed for incremental development, with each milestone building upon previous capabilities:
 
-- ✅ Load personal CSV files and convert to Parquet
-- ✅ Execute SQL queries using Apache Calcite + Arrow Java
-- ✅ Measure performance characteristics of columnar processing
+```
+Foundation → Distribution → Production
+     ↓            ↓            ↓
+Single-Node   Multi-Worker   Enterprise
+SQL Engine    Architecture   Features
+```
 
-**Example**: Analyze your bank transactions or fitness data with SQL
+### Milestone 1: Foundation (Single-Node SQL Engine)
+- **Objective**: Establish core SQL processing capabilities
+- **Key Components**: Calcite parser, Arrow execution engine, Parquet I/O
+- **Deliverable**: Functional SQL analytics on local datasets
 
-### Phase 2: Distributed Architecture (Weeks 3-4)
-**What you'll learn**: Control/data plane separation, gRPC communication, distributed execution
+### Milestone 2: Distribution (Multi-Worker Architecture)  
+- **Objective**: Implement distributed query processing
+- **Key Components**: Control/data plane separation, gRPC communication, worker orchestration
+- **Deliverable**: Horizontally scalable query execution with fault tolerance
 
-- ✅ Split into control plane (planning) and data plane (execution)
-- ✅ Distribute queries across multiple worker containers
-- ✅ Handle worker failures and implement retry logic
+### Milestone 3: Production (Enterprise Features)
+- **Objective**: Add production-ready capabilities
+- **Key Components**: Iceberg integration, security layer, observability stack
+- **Deliverable**: ACID transactions, schema evolution, and operational monitoring
 
-**Example**: Scale from 1 to 3 workers and measure query speedup
-
-### Phase 3: Production Features (Weeks 5-6)
-**What you'll learn**: ACID transactions, schema evolution, observability
-
-- ✅ Add Iceberg for time travel queries: "Show data as of yesterday"
-- ✅ Implement schema evolution: Add columns without breaking existing queries
-- ✅ Add security (mTLS), monitoring (Prometheus), and auto-scaling
-
-**Example**: Evolve your data schema and query historical snapshots
-
-## 🎓 Key Concepts You'll Master
+## Core Concepts
 
 ### Distributed Systems Patterns
 - **Control Plane vs Data Plane**: Separation of coordination and execution
@@ -142,7 +139,7 @@ curl http://localhost:8080/api/v1/queries/{query_id}
 - **Observability**: Monitoring, logging, and tracing distributed systems
 - **Security**: Authentication, authorization, and encrypted communication
 
-## 🔥 Real-World Use Cases
+## Use Cases and Examples
 
 ### Personal Analytics Playground
 ```sql
@@ -176,7 +173,7 @@ FROM user_events
 GROUP BY device_type;
 ```
 
-## 📊 Performance Benchmarks
+## Performance Benchmarks
 
 | Dataset Size | Single Node | 3 Workers | Speedup |
 |--------------|-------------|-----------|---------|
@@ -186,7 +183,7 @@ GROUP BY device_type;
 
 *Benchmarks run on TPC-H lite dataset with standard aggregation queries*
 
-## 🏃‍♂️ Development Workflow
+## Development Workflow
 
 ### Project Structure
 ```
@@ -223,16 +220,16 @@ open http://localhost:16686  # Jaeger
 jvisualvm --jdkhome $JAVA_HOME
 ```
 
-## 🤝 Contributing
+## Contributing
 
-This is a learning project! Feel free to:
+This project serves as a research and educational platform. Contributions are welcome in the following areas:
 
-- **Experiment** with different query optimization strategies
-- **Add features** like more SQL operators or storage formats
-- **Optimize performance** with better algorithms or JVM tuning
-- **Extend observability** with custom metrics and dashboards
+- Query optimization strategies and algorithm improvements
+- Additional SQL operators and storage format support
+- Performance optimization through algorithmic and JVM tuning
+- Enhanced observability with custom metrics and monitoring dashboards
 
-## 📖 Further Reading
+## References and Further Reading
 
 ### Distributed Systems
 - [Designing Data-Intensive Applications](https://dataintensive.net/) by Martin Kleppmann
@@ -247,10 +244,10 @@ This is a learning project! Feel free to:
 - [Apache Calcite Documentation](https://calcite.apache.org/)
 - [Presto/Trino Architecture](https://trino.io/docs/current/overview/concepts.html)
 
-## 📄 License
+## License
 
-MIT License - feel free to use this for learning, teaching, or building upon!
+MIT License - This project is available for educational, research, and commercial use.
 
 ---
 
-**Ready to build your own data cloud?** Start with Phase 1 and work your way up to a production-ready distributed system! 🚀
+This implementation provides a foundation for understanding distributed data processing systems. Begin with Phase 1 to establish core functionality, then progress through subsequent phases to build a comprehensive distributed analytics platform.
