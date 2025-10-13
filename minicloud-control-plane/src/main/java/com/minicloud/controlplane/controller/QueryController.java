@@ -112,6 +112,42 @@ public class QueryController {
     }
     
     /**
+     * Validate a SQL query without executing it
+     */
+    @PostMapping("/validate")
+    public ResponseEntity<QueryService.SqlValidationResult> validateQuery(@Valid @RequestBody QueryRequest request) {
+        logger.debug("Validating SQL query");
+        
+        try {
+            QueryService.SqlValidationResult result = queryService.validateQuery(request.getSql());
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            logger.error("Error validating query", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * Check if a SQL query uses supported features
+     */
+    @PostMapping("/check-support")
+    public ResponseEntity<SupportCheckResult> checkQuerySupport(@Valid @RequestBody QueryRequest request) {
+        logger.debug("Checking query feature support");
+        
+        try {
+            boolean supported = queryService.isQuerySupported(request.getSql());
+            String reason = supported ? "Query uses only supported features" : 
+                          queryService.getUnsupportedFeatureReason(request.getSql());
+            
+            SupportCheckResult result = new SupportCheckResult(supported, reason);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            logger.error("Error checking query support", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
      * Get query execution statistics
      */
     @GetMapping("/stats")
@@ -125,5 +161,21 @@ public class QueryController {
             logger.error("Error getting query statistics", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+    
+    /**
+     * Inner class for support check results
+     */
+    public static class SupportCheckResult {
+        private final boolean supported;
+        private final String reason;
+        
+        public SupportCheckResult(boolean supported, String reason) {
+            this.supported = supported;
+            this.reason = reason;
+        }
+        
+        public boolean isSupported() { return supported; }
+        public String getReason() { return reason; }
     }
 }

@@ -5,6 +5,9 @@ import com.minicloud.controlplane.dto.QueryResponse;
 import com.minicloud.controlplane.model.QueryExecution;
 import com.minicloud.controlplane.model.QueryStatus;
 import com.minicloud.controlplane.repository.QueryExecutionRepository;
+import com.minicloud.controlplane.sql.ParsedQuery;
+import com.minicloud.controlplane.sql.SqlParsingException;
+import com.minicloud.controlplane.sql.SqlParsingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +31,9 @@ public class QueryService {
     @Autowired
     private QueryExecutionRepository queryExecutionRepository;
     
+    @Autowired
+    private SqlParsingService sqlParsingService;
+    
     /**
      * Submit a new query for execution
      */
@@ -36,14 +42,31 @@ public class QueryService {
         logger.info("Submitting query with ID: {} - SQL: {}", queryId, 
                    request.getSql().substring(0, Math.min(request.getSql().length(), 100)) + "...");
         
-        QueryExecution execution = new QueryExecution(queryId, request.getSql());
-        execution = queryExecutionRepository.save(execution);
-        
-        // TODO: In Phase 2, this will trigger actual query planning and execution
-        // For now, we just store the query and return a response
-        
-        logger.info("Query submitted successfully with ID: {}", queryId);
-        return convertToQueryResponse(execution);
+        try {
+            // Parse and validate the SQL query using Calcite
+            ParsedQuery parsedQuery = sqlParsingService.parseAndValidateQuery(request.getSql());
+            logger.info("SQL parsing successful for query {}: {}", queryId, parsedQuery.getSummary());
+            
+            // Create query execution record
+            QueryExecution execution = new QueryExecution(queryId, request.getSql());
+            execution = queryExecutionRepository.save(execution);
+            
+            // TODO: In Phase 2, this will trigger actual query planning and execution
+            // For now, we just store the query and return a response
+            
+            logger.info("Query submitted successfully with ID: {}", queryId);
+            return convertToQueryResponse(execution);
+            
+        } catch (SqlParsingException e) {
+            logger.error("SQL parsing failed for query {}: {}", queryId, e.getDetailedMessage());
+            
+            // Create failed query execution record
+            QueryExecution execution = new QueryExecution(queryId, request.getSql());
+            execution.markAsFailed("SQL parsing failed: " + e.getMessage());
+            execution = queryExecutionRepository.save(execution);
+            
+            return convertToQueryResponse(execution);
+        }
     }
     
     /**
@@ -152,6 +175,38 @@ public class QueryService {
     }
     
     /**
+     * Validate a SQL query without executing it
+     */
+    public SqlValidationResult validateQuery(String sql) {
+        logger.debug("Validating SQL query: {}", sql.substring(0, Math.min(sql.length(), 100)) + "...");
+        
+        try {
+            ParsedQuery parsedQuery = sqlParsingService.parseAndValidateQuery(sql);
+            logger.debug("SQL validation successful: {}", parsedQuery.getSummary());
+            
+            return new SqlValidationResult(true, "Query is valid and supported", parsedQuery.getSqlKind().toString());
+            
+        } catch (SqlParsingException e) {
+            logger.debug("SQL validation failed: {}", e.getMessage());
+            return new SqlValidationResult(false, e.getMessage(), null);
+        }
+    }
+    
+    /**
+     * Check if a SQL query uses supported features
+     */
+    public boolean isQuerySupported(String sql) {
+        return sqlParsingService.isQuerySupported(sql);
+    }
+    
+    /**
+     * Get detailed information about unsupported features in a query
+     */
+    public String getUnsupportedFeatureReason(String sql) {
+        return sqlParsingService.getUnsupportedFeatureReason(sql);
+    }
+    
+    /**
      * Get query execution statistics
      */
     @Transactional(readOnly = true)
@@ -186,6 +241,34 @@ public class QueryService {
         response.setErrorMessage(execution.getErrorMessage());
         response.setResultLocation(execution.getResultLocation());
         return response;
+    }
+    
+    /**
+     * Inner class for SQL validation results
+     */
+    public static class SqlValidationResult {
+        private final boolean valid;
+        private final String message;
+        private final String queryType;
+        
+        public SqlValidationResult(boolean valid, String message, String queryType) {
+            this.valid = valid;
+            this.message = message;
+            this.queryType = queryType;
+        }
+        
+        public boolean isValid() { return valid; }
+        public String getMessage() { return message; }
+        public String getQueryType() { return queryType; }
+        
+        @Override
+        public String toString() {
+            return "SqlValidationResult{" +
+                    "valid=" + valid +
+                    ", message='" + message + '\'' +
+                    ", queryType='" + queryType + '\'' +
+                    '}';
+        }
     }
     
     /**
