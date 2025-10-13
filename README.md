@@ -109,9 +109,6 @@ This project is implemented in phases:
 2. **Phase 2**: Distributed architecture with gRPC communication
 3. **Phase 3**: Production features (Iceberg, security, monitoring)
 
-See the [implementation tasks](.kiro/specs/mini-data-cloud/tasks.md) for detailed development plan.
-
-
 ## License
 
 MIT License - see LICENSE file for details.bsequent phases will expand on this foundation to build a comprehensive distributed analytics platform.
