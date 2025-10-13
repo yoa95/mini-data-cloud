@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  control-plane:
+    build:
+      context: .
+      dockerfile: minicloud-control-plane/Dockerfile
+      target: development
+    ports:
+      - "8080:8080"  # REST API
+      - "9090:9090"  # gRPC
+    environment:
+      - SPRING_PROFILES_ACTIVE=development
+      - DATABASE_URL=jdbc:h2:mem:minicloud
+      - MINICLOUD_DOCKER_ENABLED=true
+      - MINICLOUD_DATA_PATH=/data
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock  # For Docker API access
+    networks:
+      - minicloud-network
+    depends_on:
+      - metadata-db
+
+  worker-1:
+    build:
+      context: .
+      dockerfile: minicloud-worker/Dockerfile
+      target: development
+    ports:
+      - "8081:8081"  # Worker HTTP
+      - "8082:8082"  # Arrow Flight
+    environment:
+      - WORKER_ID=worker-1
+      - CONTROL_PLANE_ENDPOINT=control-plane:9090
+      - DATA_PATH=/data
+      - MAX_MEMORY_MB=2048
+    volumes:
+      - ./data:/data
+    networks:
+      - minicloud-network
+    depends_on:
+      - control-plane
+
+  worker-2:
+    build:
+      context: .
+      dockerfile: minicloud-worker/Dockerfile
+      target: development
+    ports:
+      - "8083:8081"  # Worker HTTP
+      - "8084:8082"  # Arrow Flight
+    environment:
+      - WORKER_ID=worker-2
+      - CONTROL_PLANE_ENDPOINT=control-plane:9090
+      - DATA_PATH=/data
+      - MAX_MEMORY_MB=2048
+    volumes:
+      - ./data:/data
+    networks:
+      - minicloud-network
+    depends_on:
+      - control-plane
+
+  metadata-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=minicloud
+      - POSTGRES_USER=minicloud
+      - POSTGRES_PASSWORD=minicloud
+    volumes:
+      - metadata_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - minicloud-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./tools/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - minicloud-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./tools/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./tools/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - minicloud-network
+    depends_on:
+      - prometheus
+
+volumes:
+  metadata_data:
+  grafana_data:
+
+networks:
+  minicloud-network:
+    driver: bridge

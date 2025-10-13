@@ -1,0 +1,187 @@
+syntax = "proto3";
+
+package minicloud.metadata;
+
+option java_package = "com.minicloud.proto.metadata";
+option java_outer_classname = "MetadataProto";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+// Metadata service for table and schema management
+service MetadataService {
+    // Table operations
+    rpc GetTable(GetTableRequest) returns (GetTableResponse);
+    rpc CreateTable(CreateTableRequest) returns (CreateTableResponse);
+    rpc ListTables(ListTablesRequest) returns (ListTablesResponse);
+    rpc DropTable(DropTableRequest) returns (DropTableResponse);
+    
+    // Schema evolution
+    rpc UpdateSchema(UpdateSchemaRequest) returns (UpdateSchemaResponse);
+    rpc GetSchemaHistory(GetSchemaHistoryRequest) returns (GetSchemaHistoryResponse);
+    
+    // Snapshot management
+    rpc CommitSnapshot(CommitSnapshotRequest) returns (CommitSnapshotResponse);
+    rpc GetSnapshots(GetSnapshotsRequest) returns (GetSnapshotsResponse);
+}
+
+message GetTableRequest {
+    string namespace_name = 1;
+    string table_name = 2;
+    int64 snapshot_id = 3;  // Optional: specific snapshot
+}
+
+message GetTableResponse {
+    TableMetadata table = 1;
+    minicloud.common.StandardResponse response = 2;
+}
+
+message CreateTableRequest {
+    string namespace_name = 1;
+    string table_name = 2;
+    SchemaDefinition schema = 3;
+    PartitionSpec partition_spec = 4;
+    map<string, string> properties = 5;
+}
+
+message CreateTableResponse {
+    TableMetadata table = 1;
+    minicloud.common.StandardResponse response = 2;
+}
+
+message ListTablesRequest {
+    string namespace_name = 1;
+    int32 limit = 2;
+    string page_token = 3;
+}
+
+message ListTablesResponse {
+    repeated TableMetadata tables = 1;
+    string next_page_token = 2;
+    minicloud.common.StandardResponse response = 3;
+}
+
+message DropTableRequest {
+    string namespace_name = 1;
+    string table_name = 2;
+    bool purge_data = 3;
+}
+
+message DropTableResponse {
+    minicloud.common.StandardResponse response = 1;
+}
+
+message TableMetadata {
+    string namespace_name = 1;
+    string table_name = 2;
+    string metadata_location = 3;
+    int64 current_snapshot_id = 4;
+    int32 current_schema_id = 5;
+    repeated Snapshot snapshots = 6;
+    repeated SchemaVersion schemas = 7;
+    PartitionSpec partition_spec = 8;
+    map<string, string> properties = 9;
+    google.protobuf.Timestamp created_at = 10;
+    google.protobuf.Timestamp updated_at = 11;
+}
+
+message Snapshot {
+    int64 snapshot_id = 1;
+    int64 parent_snapshot_id = 2;
+    string operation = 3;  // append, overwrite, delete, replace
+    google.protobuf.Timestamp timestamp = 4;
+    string manifest_list = 5;
+    map<string, string> summary = 6;
+    int64 sequence_number = 7;
+}
+
+message SchemaDefinition {
+    repeated ColumnDefinition columns = 1;
+    repeated string primary_key = 2;
+}
+
+message ColumnDefinition {
+    string name = 1;
+    DataType type = 2;
+    bool nullable = 3;
+    string comment = 4;
+}
+
+enum DataType {
+    BOOLEAN = 0;
+    INTEGER = 1;
+    LONG = 2;
+    FLOAT = 3;
+    DOUBLE = 4;
+    DECIMAL = 5;
+    DATE = 6;
+    TIME = 7;
+    TIMESTAMP = 8;
+    STRING = 9;
+    UUID = 10;
+    BINARY = 11;
+}
+
+message SchemaVersion {
+    int32 schema_id = 1;
+    SchemaDefinition schema = 2;
+    google.protobuf.Timestamp created_at = 3;
+}
+
+message PartitionSpec {
+    int32 spec_id = 1;
+    repeated PartitionField fields = 2;
+}
+
+message PartitionField {
+    int32 source_id = 1;
+    int32 field_id = 2;
+    string name = 3;
+    string transform = 4;  // identity, bucket[N], truncate[N], year, month, day, hour
+}
+
+message UpdateSchemaRequest {
+    string namespace_name = 1;
+    string table_name = 2;
+    SchemaDefinition new_schema = 3;
+    string comment = 4;
+}
+
+message UpdateSchemaResponse {
+    TableMetadata table = 1;
+    minicloud.common.StandardResponse response = 2;
+}
+
+message GetSchemaHistoryRequest {
+    string namespace_name = 1;
+    string table_name = 2;
+}
+
+message GetSchemaHistoryResponse {
+    repeated SchemaVersion schemas = 1;
+    minicloud.common.StandardResponse response = 2;
+}
+
+message CommitSnapshotRequest {
+    string namespace_name = 1;
+    string table_name = 2;
+    string operation = 3;
+    repeated string data_files = 4;
+    map<string, string> summary = 5;
+}
+
+message CommitSnapshotResponse {
+    Snapshot snapshot = 1;
+    minicloud.common.StandardResponse response = 2;
+}
+
+message GetSnapshotsRequest {
+    string namespace_name = 1;
+    string table_name = 2;
+    int32 limit = 3;
+}
+
+message GetSnapshotsResponse {
+    repeated Snapshot snapshots = 1;
+    minicloud.common.StandardResponse response = 2;
+}

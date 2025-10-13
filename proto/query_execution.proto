@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package minicloud.execution;
+
+option java_package = "com.minicloud.proto.execution";
+option java_outer_classname = "QueryExecutionProto";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+// Main query execution service for control plane <-> worker communication
+service QueryExecutionService {
+    // Execute a query stage on this worker
+    rpc ExecuteStage(ExecuteStageRequest) returns (ExecuteStageResponse);
+    
+    // Stream query progress updates
+    rpc StreamProgress(ExecuteStageRequest) returns (stream ProgressUpdate);
+    
+    // Health check and resource reporting
+    rpc ReportHealth(HealthRequest) returns (HealthResponse);
+    
+    // Cancel running query
+    rpc CancelQuery(CancelQueryRequest) returns (CancelQueryResponse);
+}
+
+message ExecuteStageRequest {
+    string query_id = 1;
+    int32 stage_id = 2;
+    ExecutionStage stage = 3;
+    map<string, string> session_properties = 4;
+    string trace_id = 5;
+}
+
+message ExecutionStage {
+    int32 stage_id = 1;
+    StageType type = 2;
+    repeated minicloud.common.DataPartition input_partitions = 3;
+    PartitioningScheme output_partitioning = 4;
+    bytes serialized_plan = 5;  // Serialized execution plan (Calcite JSON or Substrait)
+    string plan_format = 6;     // "CALCITE_JSON" or "ARROW_SUBSTRAIT"
+}
+
+enum StageType {
+    SCAN = 0;
+    FILTER = 1;
+    PROJECT = 2;
+    JOIN = 3;
+    AGGREGATE = 4;
+    EXCHANGE = 5;
+    SORT = 6;
+    LIMIT = 7;
+}
+
+message PartitioningScheme {
+    PartitionType type = 1;
+    repeated string partition_columns = 2;
+    int32 partition_count = 3;
+}
+
+enum PartitionType {
+    SINGLE = 0;
+    HASH = 1;
+    RANGE = 2;
+    ROUND_ROBIN = 3;
+}
+
+message ExecuteStageResponse {
+    string query_id = 1;
+    int32 stage_id = 2;
+    ExecutionStatus status = 3;
+    string result_location = 4;  // Arrow Flight endpoint for results
+    minicloud.common.ExecutionStats stats = 5;
+    string error_message = 6;
+    string trace_id = 7;
+}
+
+enum ExecutionStatus {
+    SUBMITTED = 0;
+    RUNNING = 1;
+    COMPLETED = 2;
+    FAILED = 3;
+    CANCELLED = 4;
+}
+
+message ProgressUpdate {
+    string query_id = 1;
+    int32 stage_id = 2;
+    ExecutionStatus status = 3;
+    double progress_percentage = 4;
+    minicloud.common.ExecutionStats current_stats = 5;
+    google.protobuf.Timestamp timestamp = 6;
+}
+
+message HealthRequest {
+    string worker_id = 1;
+    google.protobuf.Timestamp timestamp = 2;
+}
+
+message HealthResponse {
+    minicloud.common.WorkerInfo worker_info = 1;
+    minicloud.common.StandardResponse response = 2;
+}
+
+message CancelQueryRequest {
+    string query_id = 1;
+    string reason = 2;
+}
+
+message CancelQueryResponse {
+    string query_id = 1;
+    bool cancelled = 2;
+    minicloud.common.StandardResponse response = 3;
+}
