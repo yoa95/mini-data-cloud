@@ -18,6 +18,11 @@ public class QueryResponse {
     private String errorMessage;
     private String resultLocation;
     
+    // Direct result data (new fields)
+    private java.util.List<String> columns;
+    private java.util.List<java.util.List<String>> rows;
+    private String resultDescription;
+    
     // Constructors
     public QueryResponse() {}
     
@@ -97,6 +102,30 @@ public class QueryResponse {
     
     public void setResultLocation(String resultLocation) {
         this.resultLocation = resultLocation;
+    }
+    
+    public java.util.List<String> getColumns() {
+        return columns;
+    }
+    
+    public void setColumns(java.util.List<String> columns) {
+        this.columns = columns;
+    }
+    
+    public java.util.List<java.util.List<String>> getRows() {
+        return rows;
+    }
+    
+    public void setRows(java.util.List<java.util.List<String>> rows) {
+        this.rows = rows;
+    }
+    
+    public String getResultDescription() {
+        return resultDescription;
+    }
+    
+    public void setResultDescription(String resultDescription) {
+        this.resultDescription = resultDescription;
     }
     
     @Override

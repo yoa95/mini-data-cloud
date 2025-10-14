@@ -3,6 +3,7 @@ package com.minicloud.controlplane.controller;
 import com.minicloud.controlplane.dto.QueryRequest;
 import com.minicloud.controlplane.dto.QueryResponse;
 import com.minicloud.controlplane.service.QueryService;
+import com.minicloud.controlplane.service.QueryResultService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -26,6 +29,9 @@ public class QueryController {
     
     @Autowired
     private QueryService queryService;
+    
+    @Autowired
+    private QueryResultService queryResultService;
     
     /**
      * Submit a new SQL query for execution
@@ -159,6 +165,44 @@ public class QueryController {
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             logger.error("Error getting query statistics", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * Get query results data
+     */
+    @GetMapping("/{queryId}/results")
+    public ResponseEntity<QueryResultService.QueryResult> getQueryResults(@PathVariable String queryId) {
+        logger.debug("Getting results for query: {}", queryId);
+        
+        try {
+            QueryResultService.QueryResult results = queryResultService.getResults(queryId);
+            if (results != null) {
+                return ResponseEntity.ok(results);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            logger.error("Error getting query results for: {}", queryId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * Check if query results are available
+     */
+    @GetMapping("/{queryId}/results/available")
+    public ResponseEntity<Map<String, Boolean>> checkResultsAvailable(@PathVariable String queryId) {
+        logger.debug("Checking if results are available for query: {}", queryId);
+        
+        try {
+            boolean available = queryResultService.hasResults(queryId);
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("available", available);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error checking results availability for: {}", queryId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

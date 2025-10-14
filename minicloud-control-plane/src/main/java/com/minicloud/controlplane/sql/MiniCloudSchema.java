@@ -19,8 +19,19 @@ public class MiniCloudSchema extends AbstractSchema {
     
     @Override
     protected Map<String, Table> getTableMap() {
-        logger.debug("Getting table map with {} tables", tables.size());
-        return tables;
+        // Get tables from both local registry and static registry
+        Map<String, Table> allTables = new java.util.HashMap<>(tables);
+        
+        // Add tables from static registry (from TableRegistrationService)
+        try {
+            Map<String, Table> staticTables = TableRegistrationService.getRegisteredTables();
+            allTables.putAll(staticTables);
+        } catch (Exception e) {
+            logger.warn("Could not access static table registry: {}", e.getMessage());
+        }
+        
+        logger.debug("Getting table map with {} tables", allTables.size());
+        return allTables;
     }
     
     /**
