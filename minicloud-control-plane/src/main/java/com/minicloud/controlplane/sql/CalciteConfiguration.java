@@ -25,6 +25,7 @@ import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,17 +41,25 @@ public class CalciteConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(CalciteConfiguration.class);
     
     /**
+     * Create the MiniCloud schema bean
+     */
+    @Bean
+    public MiniCloudSchema miniCloudSchema() {
+        return new MiniCloudSchema();
+    }
+    
+    /**
      * Create the main Calcite framework configuration
      */
     @Bean
-    public FrameworkConfig frameworkConfig() {
+    public FrameworkConfig frameworkConfig(MiniCloudSchema miniCloudSchema) {
         logger.info("Initializing Calcite framework configuration");
         
         // Create root schema
         SchemaPlus rootSchema = Frameworks.createRootSchema(true);
         
-        // Add minicloud schema for our tables
-        SchemaPlus minicloudSchema = rootSchema.add("minicloud", new MiniCloudSchema());
+        // Add our custom schema that supports dynamic table registration
+        SchemaPlus minicloudSchema = rootSchema.add("minicloud", miniCloudSchema);
         
         // Configure SQL parser
         SqlParser.Config parserConfig = SqlParser.config()

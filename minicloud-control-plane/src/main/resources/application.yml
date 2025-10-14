@@ -38,6 +38,16 @@ management:
     health:
       show-details: always
 
+# MiniCloud specific configuration
+minicloud:
+  storage:
+    data-directory: ./data
+    temp-directory: ./temp
+    parquet:
+      compression: SNAPPY
+      row-group-size: 1048576  # 1MB
+      page-size: 1048576       # 1MB
+
 # Logging configuration
 logging:
   level:
