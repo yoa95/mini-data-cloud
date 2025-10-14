@@ -1,51 +1,16 @@
-transaction_id,date,amount,category,description,account_type,merchant
-TXN001,2024-01-15,-45.67,groceries,WHOLE FOODS MARKET,checking,Whole Foods
-TXN002,2024-01-15,-12.50,coffee,STARBUCKS STORE,checking,Starbucks
-TXN003,2024-01-16,2500.00,salary,PAYROLL DEPOSIT,checking,ACME Corp
-TXN004,2024-01-16,-89.99,utilities,ELECTRIC COMPANY,checking,PG&E
-TXN005,2024-01-17,-25.00,transportation,UBER TRIP,checking,Uber
-TXN006,2024-01-17,-156.78,groceries,SAFEWAY STORE,checking,Safeway
-TXN007,2024-01-18,-8.95,coffee,BLUE BOTTLE COFFEE,checking,Blue Bottle
-TXN008,2024-01-19,-1200.00,rent,MONTHLY RENT,checking,Property Management
-TXN009,2024-01-20,-67.45,dining,CHIPOTLE MEXICAN GRILL,checking,Chipotle
-TXN010,2024-01-21,-15.99,entertainment,NETFLIX SUBSCRIPTION,checking,Netflix
-TXN011,2024-01-22,-234.56,shopping,AMAZON PURCHASE,checking,Amazon
-TXN012,2024-01-23,-45.00,fitness,GYM MEMBERSHIP,checking,24 Hour Fitness
-TXN013,2024-01-24,-78.90,groceries,TRADER JOES,checking,Trader Joe's
-TXN014,2024-01-25,50.00,transfer,SAVINGS TRANSFER,checking,Internal Transfer
-TXN015,2024-01-26,-32.15,dining,PANERA BREAD,checking,Panera
-TXN016,2024-01-27,-125.00,healthcare,DOCTOR VISIT,checking,Medical Center
-TXN017,2024-01-28,-19.99,entertainment,SPOTIFY PREMIUM,checking,Spotify
-TXN018,2024-01-29,-89.50,shopping,TARGET STORE,checking,Target
-TXN019,2024-01-30,-42.30,transportation,LYFT RIDE,checking,Lyft
-TXN020,2024-01-31,-156.78,groceries,WHOLE FOODS MARKET,checking,Whole Foods
-TXN021,2024-02-01,2500.00,salary,PAYROLL DEPOSIT,checking,ACME Corp
-TXN022,2024-02-02,-95.67,utilities,GAS COMPANY,checking,PG&E Gas
-TXN023,2024-02-03,-28.50,coffee,LOCAL COFFEE SHOP,checking,Blue Bottle
-TXN024,2024-02-04,-189.99,shopping,COSTCO WHOLESALE,checking,Costco
-TXN025,2024-02-05,-75.25,dining,ITALIAN RESTAURANT,checking,Olive Garden
-TXN026,2024-02-06,-12.99,entertainment,HULU SUBSCRIPTION,checking,Hulu
-TXN027,2024-02-07,-345.67,shopping,BEST BUY ELECTRONICS,checking,Best Buy
-TXN028,2024-02-08,-56.78,groceries,SAFEWAY STORE,checking,Safeway
-TXN029,2024-02-09,-22.00,transportation,BART TICKET,checking,BART
-TXN030,2024-02-10,-145.00,healthcare,DENTIST VISIT,checking,Dental Office
-TXN031,2024-02-11,-67.89,dining,SUSHI RESTAURANT,checking,Sushi Place
-TXN032,2024-02-12,-89.99,utilities,INTERNET SERVICE,checking,Comcast
-TXN033,2024-02-13,-234.56,shopping,AMAZON PURCHASE,checking,Amazon
-TXN034,2024-02-14,-125.00,entertainment,CONCERT TICKETS,checking,Ticketmaster
-TXN035,2024-02-15,1000.00,bonus,QUARTERLY BONUS,checking,ACME Corp
-TXN036,2024-02-16,-78.90,groceries,TRADER JOES,checking,Trader Joe's
-TXN037,2024-02-17,-45.67,coffee,STARBUCKS STORE,checking,Starbucks
-TXN038,2024-02-18,-156.78,shopping,NORDSTROM STORE,checking,Nordstrom
-TXN039,2024-02-19,-89.50,dining,MEXICAN RESTAURANT,checking,Chipotle
-TXN040,2024-02-20,-32.15,transportation,UBER EATS,checking,Uber
-TXN041,2024-02-21,-1200.00,rent,MONTHLY RENT,checking,Property Management
-TXN042,2024-02-22,-67.45,groceries,WHOLE FOODS MARKET,checking,Whole Foods
-TXN043,2024-02-23,-25.99,entertainment,MOVIE TICKETS,checking,AMC Theaters
-TXN044,2024-02-24,-145.67,shopping,TARGET STORE,checking,Target
-TXN045,2024-02-25,-78.90,dining,THAI RESTAURANT,checking,Thai Kitchen
-TXN046,2024-02-26,-45.00,fitness,YOGA CLASS,checking,Yoga Studio
-TXN047,2024-02-27,-123.45,healthcare,PHARMACY,checking,CVS Pharmacy
-TXN048,2024-02-28,-89.99,utilities,WATER BILL,checking,Water Company
-TXN049,2024-03-01,2500.00,salary,PAYROLL DEPOSIT,checking,ACME Corp
-TXN050,2024-03-02,-234.56,shopping,AMAZON PURCHASE,checking,Amazon
+id,date,description,category,amount,balance
+1,2024-01-15,Coffee Shop Purchase,Food & Dining,-4.50,1245.50
+2,2024-01-15,Salary Deposit,Income,2500.00,3745.50
+3,2024-01-16,Gas Station,Transportation,-45.20,3700.30
+4,2024-01-16,Grocery Store,Food & Dining,-87.65,3612.65
+5,2024-01-17,Online Shopping,Shopping,-129.99,3482.66
+6,2024-01-17,ATM Withdrawal,Cash,-100.00,3382.66
+7,2024-01-18,Restaurant,Food & Dining,-32.75,3349.91
+8,2024-01-18,Movie Theater,Entertainment,-24.00,3325.91
+9,2024-01-19,Pharmacy,Healthcare,-15.80,3310.11
+10,2024-01-19,Electric Bill,Utilities,-89.45,3220.66
+11,2024-01-20,Freelance Payment,Income,750.00,3970.66
+12,2024-01-20,Gas Station,Transportation,-38.90,3931.76
+13,2024-01-21,Coffee Shop Purchase,Food & Dining,-5.25,3926.51
+14,2024-01-21,Bookstore,Shopping,-42.30,3884.21
+15,2024-01-22,Gym Membership,Health & Fitness,-49.99,3834.22
