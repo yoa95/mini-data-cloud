@@ -2,6 +2,7 @@ package com.minicloud.controlplane.planner;
 
 import com.minicloud.controlplane.service.WorkerRegistryService;
 import com.minicloud.controlplane.grpc.WorkerClient;
+import com.minicloud.controlplane.orchestration.LoadBalancingService;
 import com.minicloud.proto.execution.QueryExecutionProto.*;
 import com.minicloud.proto.common.CommonProto;
 import org.slf4j.Logger;
@@ -30,6 +31,9 @@ public class QueryScheduler {
     
     @Autowired
     private ResultAggregator resultAggregator;
+    
+    @Autowired
+    private LoadBalancingService loadBalancingService;
     
     private final ExecutorService executorService = Executors.newCachedThreadPool();
     private final Map<String, QueryExecution> activeExecutions = new ConcurrentHashMap<>();
@@ -186,22 +190,25 @@ public class QueryScheduler {
     }
     
     /**
-     * Assign a stage to the best available worker
+     * Assign a stage to the best available worker using load balancing
      */
     private WorkerAssignment assignStageToWorker(ExecutionStage stage, List<CommonProto.WorkerInfo> availableWorkers) {
-        // Simple round-robin assignment for now
-        // In a production system, this would consider data locality, worker load, etc.
-        
         if (availableWorkers.isEmpty()) {
             throw new RuntimeException("No workers available for stage assignment");
         }
         
-        // Find worker with lowest active query count
-        CommonProto.WorkerInfo selectedWorker = availableWorkers.stream()
-                .min(Comparator.comparingInt(w -> w.getResources().getActiveQueries()))
-                .orElse(availableWorkers.get(0));
+        // Use load balancing service to select optimal worker
+        Optional<CommonProto.WorkerInfo> selectedWorkerOpt = loadBalancingService.selectWorker(
+                LoadBalancingService.LoadBalancingStrategy.RESOURCE_AWARE
+        );
         
-        logger.debug("Assigned stage {} to worker {}", stage.getStageId(), selectedWorker.getWorkerId());
+        CommonProto.WorkerInfo selectedWorker = selectedWorkerOpt.orElse(
+                availableWorkers.stream()
+                        .min(Comparator.comparingInt(w -> w.getResources().getActiveQueries()))
+                        .orElse(availableWorkers.get(0))
+        );
+        
+        logger.debug("Assigned stage {} to worker {} using load balancing", stage.getStageId(), selectedWorker.getWorkerId());
         
         return new WorkerAssignment(selectedWorker.getWorkerId(), selectedWorker.getEndpoint(), stage);
     }

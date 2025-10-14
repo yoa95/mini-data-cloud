@@ -1,6 +1,6 @@
 # Inter-Worker Communication Implementation
 
-This document describes the implementation of task 3.4: "Add inter-worker communication via gRPC streaming" for the Mini Data Cloud project.
+This document describes the implementation of inter-worker communication via gRPC streaming for the Mini Data Cloud project.
 
 ## Overview
 

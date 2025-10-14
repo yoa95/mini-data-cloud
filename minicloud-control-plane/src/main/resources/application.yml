@@ -47,6 +47,28 @@ minicloud:
       compression: SNAPPY
       row-group-size: 1048576  # 1MB
       page-size: 1048576       # 1MB
+  
+  # Docker orchestration configuration
+  docker:
+    worker-image: minicloud-worker:latest
+    network: minicloud-network
+    data-volume: ./data
+    worker-memory: 2g
+    worker-cpu: 1.0
+  
+  # Control plane endpoint for workers
+  control-plane:
+    endpoint: control-plane:9090
+  
+  # Auto-scaling configuration
+  autoscaling:
+    enabled: true
+    min-workers: 1
+    max-workers: 5
+    scale-up-threshold: 0.8
+    scale-down-threshold: 0.3
+    cooldown-minutes: 2
+    worker-startup-timeout: 120
 
 # gRPC Server configuration
 grpc:
