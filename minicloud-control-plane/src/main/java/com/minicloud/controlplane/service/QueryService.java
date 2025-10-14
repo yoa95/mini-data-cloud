@@ -8,6 +8,9 @@ import com.minicloud.controlplane.repository.QueryExecutionRepository;
 import com.minicloud.controlplane.sql.ParsedQuery;
 import com.minicloud.controlplane.sql.SqlParsingException;
 import com.minicloud.controlplane.sql.SqlParsingService;
+import com.minicloud.controlplane.execution.ArrowQueryExecutionEngine;
+import com.minicloud.controlplane.execution.FilterOperator;
+import com.minicloud.controlplane.execution.AggregationOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,9 @@ public class QueryService {
     @Autowired
     private SqlParsingService sqlParsingService;
     
+    @Autowired
+    private ArrowQueryExecutionEngine arrowExecutionEngine;
+    
     /**
      * Submit a new query for execution
      */
@@ -51,8 +57,8 @@ public class QueryService {
             QueryExecution execution = new QueryExecution(queryId, request.getSql());
             execution = queryExecutionRepository.save(execution);
             
-            // TODO: In Phase 2, this will trigger actual query planning and execution
-            // For now, we just store the query and return a response
+            // Execute query using Arrow execution engine
+            executeQueryWithArrow(queryId, parsedQuery);
             
             logger.info("Query submitted successfully with ID: {}", queryId);
             return convertToQueryResponse(execution);
@@ -219,6 +225,55 @@ public class QueryService {
         
         return new QueryStats(totalQueries, completedQueries, failedQueries, runningQueries, 
                              avgExecutionTime != null ? avgExecutionTime : 0.0);
+    }
+    
+    /**
+     * Execute query using Arrow execution engine
+     */
+    private void executeQueryWithArrow(String queryId, ParsedQuery parsedQuery) {
+        // This is a simplified demonstration - in a real implementation,
+        // the query planner would analyze the parsed query and create an appropriate execution plan
+        
+        try {
+            markQueryAsStarted(queryId);
+            
+            // Create a sample execution plan based on the parsed query
+            // For demonstration, we'll create a simple plan with sample data
+            List<String> columns = List.of("id", "name", "amount", "category");
+            
+            // Create a simple filter for demonstration (amount > 100)
+            FilterOperator.FilterPredicate filter = new FilterOperator.NumericComparisonPredicate(
+                "amount", FilterOperator.ComparisonOperator.GREATER_THAN, 100.0);
+            
+            // Create aggregation for GROUP BY queries
+            List<String> groupByColumns = List.of("category");
+            List<AggregationOperator.AggregateFunction> aggregates = List.of(
+                new AggregationOperator.AggregateFunction(
+                    AggregationOperator.AggregateFunctionType.SUM, "amount"),
+                new AggregationOperator.AggregateFunction(
+                    AggregationOperator.AggregateFunctionType.COUNT, "id")
+            );
+            
+            ArrowQueryExecutionEngine.QueryExecutionPlan plan = 
+                arrowExecutionEngine.createSamplePlan(queryId, "sample_table", columns, filter, groupByColumns, aggregates);
+            
+            // Execute the plan
+            try (ArrowQueryExecutionEngine.QueryExecutionResult result = arrowExecutionEngine.executeQuery(plan)) {
+                if (result.isSuccess()) {
+                    long rowCount = result.getResultData() != null ? result.getResultData().getRowCount() : 0;
+                    markQueryAsCompleted(queryId, rowCount, "arrow-result-" + queryId);
+                    
+                    logger.info("Arrow query execution completed for {}: {} rows, {} ms", 
+                               queryId, rowCount, result.getExecutionTimeMs());
+                } else {
+                    markQueryAsFailed(queryId, "Arrow execution failed: " + result.getErrorMessage());
+                }
+            }
+            
+        } catch (Exception e) {
+            logger.error("Arrow query execution failed for {}: {}", queryId, e.getMessage(), e);
+            markQueryAsFailed(queryId, "Arrow execution error: " + e.getMessage());
+        }
     }
     
     /**
