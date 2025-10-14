@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +45,12 @@ public class QueryService {
     @Autowired
     private QueryResultService queryResultService;
     
+    @Autowired
+    private DistributedQueryService distributedQueryService;
+    
+    @Autowired
+    private WorkerRegistryService workerRegistryService;
+    
     /**
      * Submit a new query for execution
      */
@@ -53,6 +60,12 @@ public class QueryService {
                    request.getSql().substring(0, Math.min(request.getSql().length(), 100)) + "...");
         
         try {
+            // Check if distributed execution is available and beneficial
+            if (shouldUseDistributedExecution(request)) {
+                logger.info("Using distributed execution for query {}", queryId);
+                return executeDistributedQuery(queryId, request);
+            }
+            
             // Parse and validate the SQL query using Calcite
             ParsedQuery parsedQuery = sqlParsingService.parseAndValidateQuery(request.getSql());
             logger.info("SQL parsing successful for query {}: {}", queryId, parsedQuery.getSummary());
@@ -533,6 +546,71 @@ public class QueryService {
         } catch (Exception e) {
             logger.warn("Error checking for dynamic tables: {}", e.getMessage());
             return false;
+        }
+    }
+    
+    /**
+     * Determine if a query should use distributed execution
+     */
+    private boolean shouldUseDistributedExecution(QueryRequest request) {
+        // Check if we have healthy workers
+        if (workerRegistryService.getHealthyWorkers().isEmpty()) {
+            logger.debug("No healthy workers available for distributed execution");
+            return false;
+        }
+        
+        // For now, use distributed execution for complex queries
+        String sql = request.getSql().toLowerCase();
+        
+        // Use distributed execution for queries with:
+        // - GROUP BY (aggregations benefit from parallel processing)
+        // - Large table scans (can be parallelized)
+        // - Complex joins (can be distributed)
+        boolean isComplex = sql.contains("group by") || 
+                           sql.contains("join") || 
+                           sql.contains("order by") ||
+                           sql.contains("having");
+        
+        logger.debug("Query complexity check for distributed execution: {}", isComplex);
+        return isComplex;
+    }
+    
+    /**
+     * Execute query using distributed execution
+     */
+    private QueryResponse executeDistributedQuery(String queryId, QueryRequest request) {
+        try {
+            logger.info("Executing query {} using distributed execution", queryId);
+            
+            // Create query execution record
+            QueryExecution execution = new QueryExecution(queryId, request.getSql());
+            execution = queryExecutionRepository.save(execution);
+            
+            // Execute using distributed service
+            CompletableFuture<QueryResponse> future = distributedQueryService.executeDistributedQuery(request);
+            QueryResponse distributedResponse = future.get(60, java.util.concurrent.TimeUnit.SECONDS);
+            
+            // Update the query execution record with results
+            if (distributedResponse.getStatus() == com.minicloud.controlplane.model.QueryStatus.COMPLETED) {
+                markQueryAsCompleted(queryId, distributedResponse.getRowsReturned(), "distributed-result");
+            } else {
+                markQueryAsFailed(queryId, distributedResponse.getErrorMessage());
+            }
+            
+            // Update response with execution metadata
+            distributedResponse.setQueryId(queryId);
+            distributedResponse.setSubmittedAt(execution.getSubmittedAt());
+            
+            logger.info("Distributed query {} completed with status: {}", queryId, distributedResponse.getStatus());
+            return distributedResponse;
+            
+        } catch (Exception e) {
+            logger.error("Distributed query execution failed for {}", queryId, e);
+            markQueryAsFailed(queryId, "Distributed execution failed: " + e.getMessage());
+            
+            QueryResponse errorResponse = new QueryResponse(queryId, com.minicloud.controlplane.model.QueryStatus.FAILED);
+            errorResponse.setErrorMessage("Distributed execution failed: " + e.getMessage());
+            return errorResponse;
         }
     }
 }
