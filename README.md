@@ -4,11 +4,25 @@ A containerized distributed data processing system that demonstrates core cloud 
 
 ## Architecture
 
-The Mini Data Cloud consists of:
+The Mini Data Cloud is a distributed data processing system with clear separation between control and execution concerns:
 
-- **Control Plane**: Query planning, metadata management, and cluster orchestration
-- **Data Plane**: Distributed query execution using Apache Arrow and Iceberg
-- **Storage Layer**: Parquet files managed by Apache Iceberg for ACID transactions
+### Control Plane
+- **Query Management**: SQL parsing with Apache Calcite, query validation, and execution orchestration
+- **Metadata Service**: Table registry, schema management, and namespace organization
+- **Data Loading**: CSV to Parquet conversion with automatic schema inference
+- **REST API**: Comprehensive endpoints for queries, data loading, and metadata operations
+
+### Data Plane (Planned)
+- **Query Execution**: Arrow-based columnar processing with vectorized operations
+- **Storage Access**: Parquet file reading and Iceberg table operations
+- **Distributed Processing**: Worker node coordination via gRPC communication
+
+### Current Implementation Status
+- ✅ **Control Plane**: Fully functional with REST APIs, SQL parsing, and metadata management
+- ✅ **Data Loading**: CSV to Parquet conversion with automatic table registration
+- ✅ **Query Processing**: Basic SQL execution with mock results (Arrow integration in progress)
+- ❌ **Distributed Execution**: Single-node operation (multi-worker planned)
+- ❌ **Iceberg Integration**: File-based storage (ACID transactions planned)
 
 ## Technology Stack
 
@@ -54,7 +68,21 @@ The Mini Data Cloud consists of:
    curl http://localhost:8081/actuator/health
    ```
 
-4. **Test startup automatically:**
+4. **Load sample data and run queries:**
+   ```bash
+   # Load sample bank transactions
+   curl -X POST http://localhost:8080/api/v1/data/load/sample/bank-transactions
+   
+   # Run a SQL query
+   curl -X POST http://localhost:8080/api/v1/queries \
+     -H "Content-Type: application/json" \
+     -d '{"sql": "SELECT COUNT(*) FROM bank_transactions"}'
+   
+   # Check query status (use queryId from previous response)
+   curl http://localhost:8080/api/v1/queries/{queryId}
+   ```
+
+5. **Test startup automatically:**
    ```bash
    ./test-startup.sh
    ```
@@ -85,16 +113,41 @@ mini-data-cloud/
 
 ### Control Plane (Port 8080)
 
-- `GET /actuator/health` - Health check
-- `GET /actuator/metrics` - Metrics endpoint
-- `POST /api/v1/query` - Submit SQL query
-- `GET /api/v1/query/{queryId}` - Get query status
-- `GET /api/v1/tables` - List tables
+**Health and System:**
+- `GET /actuator/health` - Spring Boot health check
+- `GET /api/v1/health` - Custom health check with database status
+- `GET /api/v1/health/info` - Detailed system information
+
+**Query Management:**
+- `POST /api/v1/queries` - Submit SQL query for execution
+- `GET /api/v1/queries/{queryId}` - Get query status and details
+- `GET /api/v1/queries` - List recent queries (with limit parameter)
+- `GET /api/v1/queries/running` - List currently running queries
+- `DELETE /api/v1/queries/{queryId}` - Cancel a query
+- `POST /api/v1/queries/validate` - Validate SQL syntax without execution
+- `POST /api/v1/queries/check-support` - Check if query uses supported features
+- `GET /api/v1/queries/stats` - Get query execution statistics
+- `GET /api/v1/queries/{queryId}/results` - Get query result data
+- `GET /api/v1/queries/{queryId}/results/available` - Check if results are ready
+
+**Data Loading:**
+- `POST /api/v1/data/load/csv` - Load CSV file into a table
+- `POST /api/v1/data/load/sample/bank-transactions` - Load sample data
+- `GET /api/v1/data/tables` - List loaded tables with statistics
+- `GET /api/v1/data/tables/{namespace}/{table}/stats` - Get table statistics
+
+**Metadata Management:**
+- `GET /api/v1/metadata/tables` - List all tables
+- `GET /api/v1/metadata/namespaces/{namespace}/tables` - List tables in namespace
+- `GET /api/v1/metadata/namespaces/{namespace}/tables/{table}` - Get table info
+- `POST /api/v1/metadata/namespaces/{namespace}/tables/{table}` - Register table
+- `DELETE /api/v1/metadata/namespaces/{namespace}/tables/{table}` - Delete table
+- `PUT /api/v1/metadata/namespaces/{namespace}/tables/{table}/stats` - Update stats
+- `GET /api/v1/metadata/stats` - Get registry statistics
 
 ### Workers (Ports 8081, 8083)
 
 - `GET /actuator/health` - Health check
-- `GET /actuator/metrics` - Metrics endpoint
 
 ### gRPC Services
 

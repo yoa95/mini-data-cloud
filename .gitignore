@@ -61,3 +61,5 @@ hs_err_pid*
 data/
 temp/
 staging/
+minicloud-control-plane/query-results/*
+!minicloud-control-plane/query-results/query_result_example.json
