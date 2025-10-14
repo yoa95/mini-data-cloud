@@ -9,6 +9,18 @@ spring:
 minicloud:
   worker:
     id: ${WORKER_ID:worker-1}
+  control-plane:
+    endpoint: ${CONTROL_PLANE_ENDPOINT:localhost:9090}
+
+# gRPC Server configuration
+grpc:
+  server:
+    port: 9091
+    enable-reflection: true
+  client:
+    control-plane:
+      address: ${minicloud.control-plane.endpoint}
+      negotiation-type: plaintext
 
 # Management and monitoring
 management:
@@ -24,5 +36,6 @@ management:
 logging:
   level:
     com.minicloud: INFO
+    io.grpc: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

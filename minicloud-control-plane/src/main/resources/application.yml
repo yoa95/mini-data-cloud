@@ -48,10 +48,17 @@ minicloud:
       row-group-size: 1048576  # 1MB
       page-size: 1048576       # 1MB
 
+# gRPC Server configuration
+grpc:
+  server:
+    port: 9090
+    enable-reflection: true
+
 # Logging configuration
 logging:
   level:
     com.minicloud: INFO
     org.springframework.web: INFO
+    io.grpc: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
