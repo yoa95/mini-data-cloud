@@ -18,12 +18,14 @@ The Docker orchestration system provides:
 Manages Docker containers for worker scaling and lifecycle management.
 
 **Key Features:**
+
 - Creates worker containers with configurable resource limits
 - Monitors container health and status
 - Manages Docker networks and volumes
 - Provides container discovery and tracking
 
 **Configuration:**
+
 ```yaml
 minicloud:
   docker:
@@ -39,12 +41,14 @@ minicloud:
 Implements auto-scaling policies based on cluster load metrics.
 
 **Key Features:**
+
 - Configurable min/max worker limits
 - Multiple scaling triggers (CPU, memory, query load)
 - Cooldown periods to prevent thrashing
 - Manual scaling override capabilities
 
 **Configuration:**
+
 ```yaml
 minicloud:
   autoscaling:
@@ -57,6 +61,7 @@ minicloud:
 ```
 
 **Scaling Triggers:**
+
 - **Scale Up**: CPU > 80%, Memory > 80%, or > 3 queries per worker
 - **Scale Down**: CPU < 30%, Memory < 30%, and < 1 query per worker
 
@@ -65,6 +70,7 @@ minicloud:
 Distributes work across available workers using various strategies.
 
 **Load Balancing Strategies:**
+
 - **ROUND_ROBIN**: Distribute requests evenly across workers
 - **LEAST_LOADED**: Send requests to worker with lowest load
 - **LEAST_CONNECTIONS**: Send requests to worker with fewest active connections
@@ -150,6 +156,7 @@ docker network ls | grep minicloud
 ### Worker Image
 
 The worker containers are created from the `minicloud-worker:latest` image with:
+
 - Environment variables for configuration
 - Network connectivity to control plane
 - Shared data volume for file access
@@ -161,6 +168,7 @@ The worker containers are created from the `minicloud-worker:latest` image with:
 ### Metrics
 
 The orchestration system exposes metrics for:
+
 - Container creation/destruction rates
 - Auto-scaling events and decisions
 - Load balancing distribution
@@ -169,6 +177,7 @@ The orchestration system exposes metrics for:
 ### Health Checks
 
 Container health is monitored through:
+
 - Docker container state (running, stopped, failed)
 - Worker heartbeat messages
 - Resource usage reporting
@@ -177,6 +186,7 @@ Container health is monitored through:
 ### Logging
 
 Structured logging includes:
+
 - Container lifecycle events
 - Auto-scaling decisions and triggers
 - Load balancing selections
@@ -240,7 +250,7 @@ Optional<WorkerInfo> worker = loadBalancer.selectWorker(
 );
 
 // Select multiple workers for distributed task
-List<WorkerInfo> workers = loadBalancer.selectWorkers(3, 
+List<WorkerInfo> workers = loadBalancer.selectWorkers(3,
     LoadBalancingStrategy.LEAST_LOADED
 );
 
@@ -253,16 +263,19 @@ loadBalancer.releaseWorkerLoad("worker-1", 1);
 ### Common Issues
 
 1. **Docker Connection Failed**
+
    - Verify Docker daemon is running
    - Check Docker socket permissions
    - Ensure control plane has access to `/var/run/docker.sock`
 
 2. **Worker Containers Not Starting**
+
    - Check worker image availability
    - Verify network configuration
    - Review container logs for startup errors
 
 3. **Auto-Scaling Not Working**
+
    - Verify auto-scaling is enabled
    - Check cooldown period settings
    - Review scaling thresholds and current metrics
