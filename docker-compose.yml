@@ -14,6 +14,7 @@ services:
       - MINICLOUD_DATA_PATH=/data
     volumes:
       - ./data:/data
+      - ./sample-data:/app/sample-data
       - /var/run/docker.sock:/var/run/docker.sock  # For Docker API access
     networks:
       - minicloud-network
