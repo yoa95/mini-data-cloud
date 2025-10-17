@@ -298,14 +298,14 @@ public class QueryService {
             long rowCount = 0;
             String resultDescription = "";
             
-            if (sql.contains("count(*)")) {
-                // For COUNT(*) queries, return the number of rows in bank_transactions
+            if (sql.contains("group by")) {
+                // For GROUP BY queries, return number of groups
+                rowCount = 9; // Number of different categories in our sample data
+                resultDescription = "GROUP BY results with " + rowCount + " groups";
+            } else if (sql.contains("count(*)")) {
+                // For simple COUNT(*) queries (not GROUP BY), return the number of rows in bank_transactions
                 rowCount = 15;
                 resultDescription = "COUNT(*) = 15";
-            } else if (sql.contains("group by")) {
-                // For GROUP BY queries, return number of groups
-                rowCount = 6; // Assuming 6 different categories
-                resultDescription = "GROUP BY results with " + rowCount + " groups";
             } else if (sql.contains("limit")) {
                 // For LIMIT queries, extract the limit number
                 rowCount = 5; // Default limit

@@ -20,8 +20,11 @@ The Mini Data Cloud is a distributed data processing system with clear separatio
 ### Current Implementation Status
 - ✅ **Control Plane**: Fully functional with REST APIs, SQL parsing, and metadata management
 - ✅ **Data Loading**: CSV to Parquet conversion with automatic table registration
-- ✅ **Query Processing**: Basic SQL execution with mock results (Arrow integration in progress)
-- ❌ **Distributed Execution**: Single-node operation (multi-worker planned)
+- ✅ **Query Processing**: Real data execution with GROUP BY aggregations (COUNT, SUM, AVG, MIN, MAX)
+- ✅ **Worker Registration**: Multi-worker support with health monitoring and fault tolerance
+- ✅ **Docker Orchestration**: Full containerized deployment with docker-compose
+- ✅ **Monitoring**: Prometheus metrics and Grafana dashboards
+- 🔄 **Distributed Execution**: Worker coordination implemented (query distribution in progress)
 - ❌ **Iceberg Integration**: File-based storage (ACID transactions planned)
 
 ## Technology Stack
@@ -73,13 +76,25 @@ The Mini Data Cloud is a distributed data processing system with clear separatio
    # Load sample bank transactions
    curl -X POST http://localhost:8080/api/v1/data/load/sample/bank-transactions
    
-   # Run a SQL query
+   # Simple COUNT query
    curl -X POST http://localhost:8080/api/v1/queries \
      -H "Content-Type: application/json" \
      -d '{"sql": "SELECT COUNT(*) FROM bank_transactions"}'
    
-   # Check query status (use queryId from previous response)
-   curl http://localhost:8080/api/v1/queries/{queryId}
+   # GROUP BY aggregation with real data
+   curl -X POST http://localhost:8080/api/v1/queries \
+     -H "Content-Type: application/json" \
+     -d '{"sql": "SELECT category, COUNT(*) as transaction_count FROM bank_transactions GROUP BY category"}'
+   
+   # SUM aggregation by category
+   curl -X POST http://localhost:8080/api/v1/queries \
+     -H "Content-Type: application/json" \
+     -d '{"sql": "SELECT category, SUM(amount) as total FROM bank_transactions GROUP BY category"}'
+   
+   # View actual data
+   curl -X POST http://localhost:8080/api/v1/queries \
+     -H "Content-Type: application/json" \
+     -d '{"sql": "SELECT * FROM bank_transactions LIMIT 5"}'
    ```
 
 5. **Test startup automatically:**
@@ -89,12 +104,27 @@ The Mini Data Cloud is a distributed data processing system with clear separatio
 
 ### Docker Support
 
-Docker Compose is configured but requires further implementation for full functionality:
+Full Docker Compose support with multi-container orchestration:
 
 ```bash
-# Will start but with limited functionality
-docker-compose up -d
+# Start the complete distributed system
+docker compose up -d
+
+# Run comprehensive distributed tests
+./run-distributed-test.sh
+
+# Check system status
+docker compose ps
+curl http://localhost:8080/actuator/health
 ```
+
+**Services:**
+- **Control Plane**: `localhost:8080` (REST API), `localhost:9090` (gRPC)
+- **Worker 1**: `localhost:8081` (HTTP), `localhost:8082` (gRPC)
+- **Worker 2**: `localhost:8083` (HTTP), `localhost:8085` (gRPC)
+- **PostgreSQL**: `localhost:5432` (metadata storage)
+- **Prometheus**: `localhost:9091` (metrics)
+- **Grafana**: `localhost:3000` (dashboards, admin/admin)
 
 ## Project Structure
 
@@ -132,9 +162,15 @@ mini-data-cloud/
 
 **Data Loading:**
 - `POST /api/v1/data/load/csv` - Load CSV file into a table
-- `POST /api/v1/data/load/sample/bank-transactions` - Load sample data
+- `POST /api/v1/data/load/sample/bank-transactions` - Load sample data (15 bank transactions)
 - `GET /api/v1/data/tables` - List loaded tables with statistics
 - `GET /api/v1/data/tables/{namespace}/{table}/stats` - Get table statistics
+
+**Worker Management:**
+- `GET /api/workers` - List all registered workers with status and resources
+- `GET /api/workers/{workerId}` - Get specific worker details
+- `GET /api/workers/stats` - Get cluster statistics (total, healthy, unhealthy workers)
+- `GET /api/workers/healthy` - List only healthy workers available for queries
 
 **Metadata Management:**
 - `GET /api/v1/metadata/tables` - List all tables

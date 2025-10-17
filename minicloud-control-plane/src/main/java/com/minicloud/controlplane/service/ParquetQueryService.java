@@ -190,4 +190,155 @@ public class ParquetQueryService {
             return 15; // Fallback count
         }
     }
+    
+    /**
+     * Perform GROUP BY aggregation on actual Parquet data
+     */
+    public List<List<String>> performGroupByAggregation(String tableName, String groupByColumn, String aggregateFunction, String aggregateColumn) {
+        try {
+            logger.info("Performing GROUP BY aggregation: {} {} GROUP BY {} on table {}", 
+                       aggregateFunction, aggregateColumn, groupByColumn, tableName);
+            
+            // Read all data from the table
+            List<List<String>> allRows = readTableData(tableName, -1);
+            if (allRows.isEmpty()) {
+                logger.warn("No data found for table: {}", tableName);
+                return new ArrayList<>();
+            }
+            
+            // Determine column indices (assuming standard bank_transactions schema)
+            int groupByIndex = getColumnIndex(groupByColumn);
+            int aggregateIndex = getColumnIndex(aggregateColumn);
+            
+            if (groupByIndex == -1) {
+                logger.error("Group by column '{}' not found", groupByColumn);
+                return new ArrayList<>();
+            }
+            
+            // Group data by the specified column
+            java.util.Map<String, java.util.List<List<String>>> groupedData = new java.util.HashMap<>();
+            
+            for (List<String> row : allRows) {
+                if (row.size() > groupByIndex) {
+                    String groupKey = row.get(groupByIndex);
+                    groupedData.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(row);
+                }
+            }
+            
+            // Perform aggregation on each group
+            List<List<String>> results = new ArrayList<>();
+            
+            for (java.util.Map.Entry<String, java.util.List<List<String>>> entry : groupedData.entrySet()) {
+                String groupKey = entry.getKey();
+                java.util.List<List<String>> groupRows = entry.getValue();
+                
+                String aggregateValue = calculateAggregate(groupRows, aggregateFunction, aggregateIndex);
+                results.add(Arrays.asList(groupKey, aggregateValue));
+            }
+            
+            // Sort results by group key for consistent output
+            results.sort((a, b) -> a.get(0).compareTo(b.get(0)));
+            
+            logger.info("GROUP BY aggregation completed: {} groups found", results.size());
+            return results;
+            
+        } catch (Exception e) {
+            logger.error("Error performing GROUP BY aggregation on table: {}", tableName, e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * Get column index based on column name (for bank_transactions schema)
+     */
+    private int getColumnIndex(String columnName) {
+        switch (columnName.toLowerCase()) {
+            case "id": return 0;
+            case "date": return 1;
+            case "description": return 2;
+            case "category": return 3;
+            case "amount": return 4;
+            case "balance": return 5;
+            default: return -1;
+        }
+    }
+    
+    /**
+     * Calculate aggregate value for a group of rows
+     */
+    private String calculateAggregate(java.util.List<List<String>> groupRows, String function, int columnIndex) {
+        try {
+            switch (function.toUpperCase()) {
+                case "COUNT":
+                    return String.valueOf(groupRows.size());
+                    
+                case "SUM":
+                    if (columnIndex == -1) return "0";
+                    double sum = 0.0;
+                    for (List<String> row : groupRows) {
+                        if (row.size() > columnIndex) {
+                            try {
+                                sum += Double.parseDouble(row.get(columnIndex));
+                            } catch (NumberFormatException e) {
+                                // Skip non-numeric values
+                            }
+                        }
+                    }
+                    return String.format("%.2f", sum);
+                    
+                case "AVG":
+                    if (columnIndex == -1) return "0";
+                    double total = 0.0;
+                    int count = 0;
+                    for (List<String> row : groupRows) {
+                        if (row.size() > columnIndex) {
+                            try {
+                                total += Double.parseDouble(row.get(columnIndex));
+                                count++;
+                            } catch (NumberFormatException e) {
+                                // Skip non-numeric values
+                            }
+                        }
+                    }
+                    return count > 0 ? String.format("%.2f", total / count) : "0";
+                    
+                case "MIN":
+                    if (columnIndex == -1) return "0";
+                    double min = Double.MAX_VALUE;
+                    for (List<String> row : groupRows) {
+                        if (row.size() > columnIndex) {
+                            try {
+                                double value = Double.parseDouble(row.get(columnIndex));
+                                min = Math.min(min, value);
+                            } catch (NumberFormatException e) {
+                                // Skip non-numeric values
+                            }
+                        }
+                    }
+                    return min == Double.MAX_VALUE ? "0" : String.format("%.2f", min);
+                    
+                case "MAX":
+                    if (columnIndex == -1) return "0";
+                    double max = Double.MIN_VALUE;
+                    for (List<String> row : groupRows) {
+                        if (row.size() > columnIndex) {
+                            try {
+                                double value = Double.parseDouble(row.get(columnIndex));
+                                max = Math.max(max, value);
+                            } catch (NumberFormatException e) {
+                                // Skip non-numeric values
+                            }
+                        }
+                    }
+                    return max == Double.MIN_VALUE ? "0" : String.format("%.2f", max);
+                    
+                default:
+                    logger.warn("Unsupported aggregate function: {}", function);
+                    return "0";
+            }
+        } catch (Exception e) {
+            logger.error("Error calculating aggregate: {}", e.getMessage());
+            return "0";
+        }
+    }
 }
