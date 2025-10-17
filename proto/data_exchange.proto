@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package minicloud.dataexchange;
+
+option java_package = "com.minicloud.proto.dataexchange";
+option java_outer_classname = "DataExchangeProto";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+// Data exchange service for inter-worker communication
+service DataExchangeService {
+    // Stream data between workers for shuffle operations
+    rpc StreamData(stream DataChunk) returns (stream DataChunk);
+    
+    // Request data from another worker
+    rpc RequestData(DataRequest) returns (stream DataChunk);
+    
+    // Send intermediate results to another worker
+    rpc SendResults(stream DataChunk) returns (DataTransferResponse);
+    
+    // Get available data partitions from a worker
+    rpc GetAvailablePartitions(PartitionRequest) returns (PartitionResponse);
+}
+
+// Data chunk containing serialized Arrow RecordBatch
+message DataChunk {
+    string transfer_id = 1;          // Unique identifier for this data transfer
+    string query_id = 2;             // Query this data belongs to
+    int32 stage_id = 3;              // Stage this data belongs to
+    int32 partition_id = 4;          // Partition identifier
+    int32 chunk_index = 5;           // Index of this chunk in the sequence
+    bool is_last_chunk = 6;          // Whether this is the final chunk
+    bytes arrow_record_batch = 7;    // Serialized Arrow RecordBatch
+    ArrowSchema schema = 8;          // Schema information for the data
+    CompressionType compression = 9;  // Compression used for the data
+    int64 uncompressed_size = 10;    // Original size before compression
+    string checksum = 11;            // Checksum for data integrity
+    google.protobuf.Timestamp timestamp = 12;
+}
+
+// Arrow schema information
+message ArrowSchema {
+    bytes schema_bytes = 1;          // Serialized Arrow Schema
+    string schema_fingerprint = 2;   // Schema fingerprint for compatibility checking
+}
+
+enum CompressionType {
+    NONE = 0;
+    LZ4 = 1;
+    SNAPPY = 2;
+    ZSTD = 3;
+}
+
+// Request for data from another worker
+message DataRequest {
+    string query_id = 1;
+    int32 stage_id = 2;
+    repeated int32 partition_ids = 3;  // Specific partitions to request
+    string requesting_worker_id = 4;
+    ArrowSchema expected_schema = 5;   // Expected schema for validation
+    int32 max_chunk_size = 6;         // Maximum size per chunk in bytes
+}
+
+// Response for data transfer operations
+message DataTransferResponse {
+    string transfer_id = 1;
+    TransferStatus status = 2;
+    int64 total_bytes_transferred = 3;
+    int64 total_rows_transferred = 4;
+    int32 total_chunks = 5;
+    string error_message = 6;
+    minicloud.common.StandardResponse response = 7;
+}
+
+enum TransferStatus {
+    TRANSFER_STARTED = 0;
+    TRANSFER_IN_PROGRESS = 1;
+    TRANSFER_COMPLETED = 2;
+    TRANSFER_FAILED = 3;
+    TRANSFER_CANCELLED = 4;
+}
+
+// Request for available partitions
+message PartitionRequest {
+    string query_id = 1;
+    int32 stage_id = 2;
+    string requesting_worker_id = 3;
+}
+
+// Response with available partitions
+message PartitionResponse {
+    repeated PartitionInfo available_partitions = 1;
+    minicloud.common.StandardResponse response = 2;
+}
+
+message PartitionInfo {
+    int32 partition_id = 1;
+    int64 estimated_rows = 2;
+    int64 estimated_bytes = 3;
+    ArrowSchema schema = 4;
+    bool ready_for_transfer = 5;
+    google.protobuf.Timestamp created_at = 6;
+}
+
+// Shuffle operation configuration
+message ShuffleConfig {
+    ShuffleType type = 1;
+    repeated string partition_columns = 2;
+    int32 target_partition_count = 3;
+    string hash_function = 4;         // "murmur3", "xxhash", etc.
+}
+
+enum ShuffleType {
+    HASH_SHUFFLE = 0;
+    RANGE_SHUFFLE = 1;
+    ROUND_ROBIN_SHUFFLE = 2;
+    BROADCAST_SHUFFLE = 3;
+}
+
+// Retry configuration for failed transfers
+message RetryConfig {
+    int32 max_retries = 1;
+    int32 initial_delay_ms = 2;
+    int32 max_delay_ms = 3;
+    double backoff_multiplier = 4;
+    repeated string retryable_errors = 5;  // Error patterns that should trigger retry
+}

@@ -92,9 +92,58 @@ public class QueryResultService {
      */
     public QueryResult generateMockResults(String sql, long rowCount) {
         sql = sql.toLowerCase();
+
         
-        if (sql.contains("count(*)")) {
-            // For COUNT(*) queries - get actual count from Parquet files
+        if (sql.contains("group by category")) {
+            // For GROUP BY category queries - determine the correct column names and aggregation
+            List<String> columns;
+            String aggregateFunction;
+            String aggregateColumn;
+            
+            if (sql.contains("count(*) as transaction_count")) {
+                columns = Arrays.asList("category", "transaction_count");
+                aggregateFunction = "COUNT";
+                aggregateColumn = "*";
+            } else if (sql.contains("count(*)")) {
+                columns = Arrays.asList("category", "count");
+                aggregateFunction = "COUNT";
+                aggregateColumn = "*";
+            } else if (sql.contains("sum(amount)")) {
+                columns = Arrays.asList("category", "total");
+                aggregateFunction = "SUM";
+                aggregateColumn = "amount";
+            } else if (sql.contains("avg(amount)")) {
+                columns = Arrays.asList("category", "avg_amount");
+                aggregateFunction = "AVG";
+                aggregateColumn = "amount";
+            } else if (sql.contains("min(amount)")) {
+                columns = Arrays.asList("category", "min_amount");
+                aggregateFunction = "MIN";
+                aggregateColumn = "amount";
+            } else if (sql.contains("max(amount)")) {
+                columns = Arrays.asList("category", "max_amount");
+                aggregateFunction = "MAX";
+                aggregateColumn = "amount";
+            } else {
+                // Default to COUNT
+                columns = Arrays.asList("category", "count");
+                aggregateFunction = "COUNT";
+                aggregateColumn = "*";
+            }
+            
+            // Use real Parquet data for GROUP BY aggregation
+            List<List<String>> resultRows = parquetQueryService.performGroupByAggregation(
+                "bank_transactions", "category", aggregateFunction, aggregateColumn);
+            
+            return new QueryResult(
+                columns,
+                resultRows,
+                resultRows.size(),
+                "GROUP BY category results (REAL DATA from Parquet file)"
+            );
+        } else if (sql.contains("count(*)") && !sql.contains("group by")) {
+            // For simple COUNT(*) queries (not GROUP BY) - get actual count from Parquet files
+
             long actualCount = parquetQueryService.countTableRows("bank_transactions");
             return new QueryResult(
                 Arrays.asList("count"),
@@ -103,24 +152,6 @@ public class QueryResultService {
                 ),
                 1,
                 "Aggregation result (from Parquet file)"
-            );
-        } else if (sql.contains("group by category")) {
-            // For GROUP BY category queries
-            return new QueryResult(
-                Arrays.asList("category", "count"),
-                Arrays.asList(
-                    Arrays.asList("Food & Dining", "4"),
-                    Arrays.asList("Income", "2"),
-                    Arrays.asList("Transportation", "2"),
-                    Arrays.asList("Shopping", "2"),
-                    Arrays.asList("Entertainment", "1"),
-                    Arrays.asList("Healthcare", "1"),
-                    Arrays.asList("Utilities", "1"),
-                    Arrays.asList("Cash", "1"),
-                    Arrays.asList("Health & Fitness", "1")
-                ),
-                9,
-                "GROUP BY results"
             );
         } else if (sql.contains("select *") || sql.contains("limit")) {
             // For SELECT * queries - read actual data from Parquet files

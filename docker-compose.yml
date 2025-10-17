@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   control-plane:
     build:
@@ -12,10 +10,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=development
       - DATABASE_URL=jdbc:h2:mem:minicloud
-      - MINICLOUD_DOCKER_ENABLED=true
+      - MINICLOUD_DOCKER_ENABLED=false
       - MINICLOUD_DATA_PATH=/data
     volumes:
       - ./data:/data
+      - ./sample-data:/app/sample-data
       - /var/run/docker.sock:/var/run/docker.sock  # For Docker API access
     networks:
       - minicloud-network
@@ -49,7 +48,7 @@ services:
       target: development
     ports:
       - "8083:8081"  # Worker HTTP
-      - "8084:8082"  # Arrow Flight
+      - "8085:8082"  # Arrow Flight
     environment:
       - WORKER_ID=worker-2
       - CONTROL_PLANE_ENDPOINT=control-plane:9090

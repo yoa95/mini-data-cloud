@@ -10,13 +10,13 @@ WORKDIR /app
 
 # Development stage
 FROM base as development
-COPY target/minicloud-control-plane-*.jar app.jar
+COPY minicloud-control-plane/target/minicloud-control-plane-*.jar app.jar
 EXPOSE 8080 9090
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 # Production stage
 FROM base as production
-COPY target/minicloud-control-plane-*.jar app.jar
+COPY minicloud-control-plane/target/minicloud-control-plane-*.jar app.jar
 
 # JVM tuning for production
 ENV JAVA_OPTS="-Xmx2g -Xms1g -XX:+UseZGC -XX:+UnlockExperimentalVMOptions"
