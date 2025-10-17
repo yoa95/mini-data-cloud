@@ -5,6 +5,7 @@ import com.minicloud.proto.common.CommonProto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  * Implements multiple load balancing strategies and tracks worker performance.
  */
 @Service
+@ConditionalOnProperty(name = "minicloud.docker.enabled", havingValue = "true", matchIfMissing = false)
 public class LoadBalancingService {
     
     private static final Logger logger = LoggerFactory.getLogger(LoadBalancingService.class);

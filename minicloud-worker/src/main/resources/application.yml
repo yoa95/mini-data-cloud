@@ -15,7 +15,7 @@ minicloud:
 # gRPC Server configuration
 grpc:
   server:
-    port: 9091
+    port: 8082
     enable-reflection: true
   client:
     control-plane:

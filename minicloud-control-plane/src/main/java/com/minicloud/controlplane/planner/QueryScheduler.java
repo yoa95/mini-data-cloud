@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -32,7 +34,7 @@ public class QueryScheduler {
     @Autowired
     private ResultAggregator resultAggregator;
     
-    @Autowired
+    @Autowired(required = false)
     private LoadBalancingService loadBalancingService;
     
     private final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -197,16 +199,23 @@ public class QueryScheduler {
             throw new RuntimeException("No workers available for stage assignment");
         }
         
-        // Use load balancing service to select optimal worker
-        Optional<CommonProto.WorkerInfo> selectedWorkerOpt = loadBalancingService.selectWorker(
-                LoadBalancingService.LoadBalancingStrategy.RESOURCE_AWARE
-        );
-        
-        CommonProto.WorkerInfo selectedWorker = selectedWorkerOpt.orElse(
-                availableWorkers.stream()
-                        .min(Comparator.comparingInt(w -> w.getResources().getActiveQueries()))
-                        .orElse(availableWorkers.get(0))
-        );
+        // Use load balancing service to select optimal worker if available
+        CommonProto.WorkerInfo selectedWorker;
+        if (loadBalancingService != null) {
+            Optional<CommonProto.WorkerInfo> selectedWorkerOpt = loadBalancingService.selectWorker(
+                    LoadBalancingService.LoadBalancingStrategy.RESOURCE_AWARE
+            );
+            selectedWorker = selectedWorkerOpt.orElse(
+                    availableWorkers.stream()
+                            .min(Comparator.comparingInt(w -> w.getResources().getActiveQueries()))
+                            .orElse(availableWorkers.get(0))
+            );
+        } else {
+            // Fallback to simple selection when load balancing service is not available
+            selectedWorker = availableWorkers.stream()
+                    .min(Comparator.comparingInt(w -> w.getResources().getActiveQueries()))
+                    .orElse(availableWorkers.get(0));
+        }
         
         logger.debug("Assigned stage {} to worker {} using load balancing", stage.getStageId(), selectedWorker.getWorkerId());
         

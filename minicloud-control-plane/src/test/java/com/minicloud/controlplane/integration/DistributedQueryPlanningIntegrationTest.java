@@ -226,7 +226,7 @@ class DistributedQueryPlanningIntegrationTest {
     void testComponentIntegrationFlow() throws Exception {
         logger.info("Testing complete component integration flow");
         
-        String sql = "SELECT category, COUNT(*) as count FROM bank_transactions GROUP BY category";
+        String sql = "SELECT category, COUNT(*) as transaction_count FROM bank_transactions GROUP BY category";
         
         // Step 1: Parse SQL
         ParsedQuery parsedQuery = sqlParsingService.parseAndValidateQuery(sql);

@@ -50,6 +50,7 @@ minicloud:
   
   # Docker orchestration configuration
   docker:
+    enabled: false  # Disable Docker orchestration when running in containers
     worker-image: minicloud-worker:latest
     network: minicloud-network
     data-volume: ./data

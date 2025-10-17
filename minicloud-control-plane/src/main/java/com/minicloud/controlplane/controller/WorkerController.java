@@ -30,7 +30,7 @@ public class WorkerController {
      */
     @GetMapping
     public ResponseEntity<List<WorkerInfo>> getWorkers(
-            @RequestParam(required = false) String status) {
+            @RequestParam(value = "status", required = false) String status) {
         
         logger.info("Getting workers with status filter: {}", status);
         

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Implements basic scaling policies with configurable thresholds.
  */
 @Service
+@ConditionalOnProperty(name = "minicloud.docker.enabled", havingValue = "true", matchIfMissing = false)
 public class ClusterAutoScaler {
     
     private static final Logger logger = LoggerFactory.getLogger(ClusterAutoScaler.class);

@@ -4,6 +4,7 @@ import com.minicloud.controlplane.orchestration.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/orchestration")
+@ConditionalOnProperty(name = "minicloud.docker.enabled", havingValue = "true", matchIfMissing = false)
 public class OrchestrationController {
     
     private static final Logger logger = LoggerFactory.getLogger(OrchestrationController.class);

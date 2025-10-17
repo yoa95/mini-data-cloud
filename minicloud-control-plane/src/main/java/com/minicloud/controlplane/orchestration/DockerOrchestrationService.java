@@ -11,6 +11,7 @@ import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * Handles container creation, health monitoring, and cleanup.
  */
 @Service
+@ConditionalOnProperty(name = "minicloud.docker.enabled", havingValue = "true", matchIfMissing = false)
 public class DockerOrchestrationService {
     
     private static final Logger logger = LoggerFactory.getLogger(DockerOrchestrationService.class);

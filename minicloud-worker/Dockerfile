@@ -10,13 +10,13 @@ WORKDIR /app
 
 # Development stage
 FROM base as development
-COPY target/minicloud-worker-*.jar app.jar
+COPY minicloud-worker/target/minicloud-worker-*.jar app.jar
 EXPOSE 8081 8082
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
 # Production stage
 FROM base as production
-COPY target/minicloud-worker-*.jar app.jar
+COPY minicloud-worker/target/minicloud-worker-*.jar app.jar
 
 # JVM tuning for analytical workloads
 ENV JAVA_OPTS="-Xmx4g -Xms2g -XX:+UseZGC -XX:MaxDirectMemorySize=8g -XX:+UnlockExperimentalVMOptions"

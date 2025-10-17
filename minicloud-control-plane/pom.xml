@@ -127,6 +127,22 @@
             <artifactId>docker-java-transport-httpclient5</artifactId>
             <version>3.3.4</version>
         </dependency>
+        <!-- HTTP Client 5 and Core 5 for Docker client - explicit versions to avoid conflicts -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5-h2</artifactId>
+            <version>5.2.4</version>
+        </dependency>
 
         <!-- Testing -->
         <dependency>
@@ -160,6 +176,13 @@
                 <configuration>
                     <mainClass>com.minicloud.controlplane.MiniCloudControlPlaneApplication</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
