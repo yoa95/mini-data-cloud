@@ -373,7 +373,7 @@ export const SqlEditor: React.FC<SqlEditorProps> = ({
   }, [formatQuery, onFormat, isEditorReady]);
 
   return (
-    <div className={cn('border rounded-md overflow-hidden', className)}>
+    <div className={cn('overflow-hidden', className)}>
       <Editor
         height={height}
         language="sql"

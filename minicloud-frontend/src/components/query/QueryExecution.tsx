@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Play, Square, Download, Clock, Database, Zap, Activity } from 'lucide-react';
@@ -206,8 +206,15 @@ export const QueryExecution: React.FC<QueryExecutionProps> = ({
   };
 
   return (
-    <Card className={cn('p-4', className)}>
-      <div className="flex items-center justify-between mb-4">
+    <Card className={cn(className)}>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Play className="h-4 w-4 text-primary" />
+          Query Execution
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Button
             onClick={handleExecute}
@@ -378,6 +385,7 @@ export const QueryExecution: React.FC<QueryExecutionProps> = ({
           </p>
         </div>
       )}
+      </CardContent>
     </Card>
   );
 };

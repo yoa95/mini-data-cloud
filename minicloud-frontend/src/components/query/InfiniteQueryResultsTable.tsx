@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
+// @ts-ignore
 import { FixedSizeList as List } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';

@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
+// @ts-ignore
 import { FixedSizeList as List } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
 import { Card } from '@/components/ui/Card';
