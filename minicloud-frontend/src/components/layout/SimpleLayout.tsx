@@ -1,25 +1,12 @@
-import { Suspense, useEffect } from 'react'
+import { Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Navigation } from './Navigation'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { ConnectionStatus } from '@/components/ui/ConnectionStatus'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { useUIStore } from '@/store/ui-store'
 import { getRouteTitle } from '@/lib/simple-router'
-import { cn } from '@/lib/utils'
 
-export function Layout() {
+export function SimpleLayout() {
   const location = useLocation()
-  const sidebarOpen = useUIStore((state) => state.preferences.sidebarOpen)
-  
-  // Initialize WebSocket connection (optional - backend doesn't have WebSocket yet)
-  // useWebSocket()
-  
-  // Update document title based on route
-  useEffect(() => {
-    const title = getRouteTitle(location.pathname)
-    document.title = `${title} - Mini Data Cloud`
-  }, [location.pathname])
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="minicloud-ui-theme">
@@ -28,12 +15,9 @@ export function Layout() {
         <Navigation />
         
         {/* Main Content Area */}
-        <div className={cn(
-          'flex-1 flex flex-col transition-all duration-300',
-          sidebarOpen ? 'ml-64' : 'ml-16'
-        )}>
+        <div className="flex-1 flex flex-col ml-64">
           {/* Header */}
-          <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+          <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
             <div className="flex items-center justify-between px-6 py-4">
               <div className="flex-1">
                 <h1 className="text-lg font-semibold">
@@ -41,7 +25,7 @@ export function Layout() {
                 </h1>
               </div>
               <div className="flex items-center space-x-4">
-                <ConnectionStatus showText size="sm" />
+                <span className="text-sm text-muted-foreground">Connected</span>
               </div>
             </div>
           </header>
@@ -66,9 +50,8 @@ export function Layout() {
                 <div>
                   Mini Data Cloud - Distributed Query Engine
                 </div>
-                <div className="flex items-center space-x-4">
-                  <ConnectionStatus size="sm" />
-                  <span>v1.0.0</span>
+                <div>
+                  v1.0.0
                 </div>
               </div>
             </div>
