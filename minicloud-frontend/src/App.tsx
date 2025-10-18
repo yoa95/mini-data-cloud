@@ -1,3 +1,4 @@
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -13,10 +14,24 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { UploadPage, TablesPage, QueryPage, MonitoringPage } from './pages';
 
-function App() {
+// Breadcrumb mapping for different routes
+const breadcrumbMap: Record<string, { title: string; parent?: string }> = {
+  '/': { title: 'Upload' },
+  '/upload': { title: 'Upload' },
+  '/tables': { title: 'Tables' },
+  '/query': { title: 'Query' },
+  '/monitoring': { title: 'Monitoring' },
+};
+
+function AppContent() {
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const breadcrumb = breadcrumbMap[currentPath] || { title: 'Mini Data Cloud' };
+
   return (
- <SidebarProvider>
+    <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
@@ -29,29 +44,36 @@ function App() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
+                  <BreadcrumbLink href="/">
+                    Mini Data Cloud
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                  <BreadcrumbPage>{breadcrumb.title}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-            <div className="bg-muted/50 aspect-video rounded-xl" />
-          </div>
-          <div className="bg-muted/50 min-h-[100vh] flex-1 rounded-xl md:min-h-min" />
-        </div>
+        <Routes>
+          <Route path="/" element={<UploadPage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/tables" element={<TablesPage />} />
+          <Route path="/query" element={<QueryPage />} />
+          <Route path="/monitoring" element={<MonitoringPage />} />
+        </Routes>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
 }
 
 export default App
