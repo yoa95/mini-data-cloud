@@ -1,11 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import FileUploadZone from '../components/upload/FileUploadZone';
 import UploadProgress from '../components/upload/UploadProgress';
 import { useUploadQueue } from '../hooks/useUploadQueue';
+import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 
 export interface UploadPageProps {}
 
 const UploadPage: React.FC<UploadPageProps> = () => {
+  const { clearBreadcrumbs } = useBreadcrumb();
+  
+  // Clear breadcrumbs when component mounts
+  useEffect(() => {
+    clearBreadcrumbs();
+  }, [clearBreadcrumbs]);
+
   const {
     uploads,
     addFiles,

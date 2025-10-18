@@ -5,7 +5,7 @@ import type { Table } from '../../types/api';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Checkbox } from '../ui/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
@@ -211,17 +211,17 @@ const TableList: React.FC<TableListProps> = ({ onTableSelect }) => {
               onClick={() => onTableSelect?.(table)}
             >
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Database className="h-4 w-4" />
-                  {table.name}
-                </CardTitle>
-                <CardDescription>
+                <div className="space-y-2">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Database className="h-4 w-4" />
+                    {table.name}
+                  </CardTitle>
                   {table.namespace && (
                     <Badge variant="secondary" className="text-xs">
                       {table.namespace}
                     </Badge>
                   )}
-                </CardDescription>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">

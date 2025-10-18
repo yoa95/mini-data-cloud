@@ -1,8 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 
 export interface QueryPageProps {}
 
 const QueryPage: React.FC<QueryPageProps> = () => {
+  const { clearBreadcrumbs } = useBreadcrumb();
+  
+  // Clear breadcrumbs when component mounts
+  useEffect(() => {
+    clearBreadcrumbs();
+  }, [clearBreadcrumbs]);
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <div className="grid auto-rows-min gap-4 md:grid-cols-3">

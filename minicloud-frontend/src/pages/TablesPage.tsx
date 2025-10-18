@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Table } from '../types/api';
 import TableList from '../components/metadata/TableList';
 import TableDetails from '../components/metadata/TableDetails';
+import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 
 export interface TablesPageProps {}
 
 const TablesPage: React.FC<TablesPageProps> = () => {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const { addBreadcrumb, clearBreadcrumbs } = useBreadcrumb();
+
+  // Clear breadcrumbs when component mounts
+  useEffect(() => {
+    clearBreadcrumbs();
+  }, [clearBreadcrumbs]);
+
+  // Update breadcrumbs when table selection changes
+  useEffect(() => {
+    if (selectedTable) {
+      addBreadcrumb({ title: selectedTable });
+    } else {
+      // Remove any table breadcrumbs when going back to list
+      clearBreadcrumbs();
+    }
+  }, [selectedTable, addBreadcrumb, clearBreadcrumbs]);
 
   const handleTableSelect = (table: Table) => {
     setSelectedTable(table.name);

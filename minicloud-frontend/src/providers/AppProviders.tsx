@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthContext, useAuthState } from '../lib/auth';
 import { httpClient } from '../lib/http-client';
 import { createAuthInterceptor } from '../lib/auth';
+import { BreadcrumbProvider } from '../contexts/BreadcrumbContext';
 
 // Create a stable query client instance
 const queryClient = new QueryClient({
@@ -70,8 +71,10 @@ export const AppProviders: React.FC<AppProvidersProps> = ({ children }) => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {children}
-        {import.meta.env.DEV && <ReactQueryDevtools />}
+        <BreadcrumbProvider>
+          {children}
+          {import.meta.env.DEV && <ReactQueryDevtools />}
+        </BreadcrumbProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
