@@ -1,33 +1,54 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { ClusterStatus, QueryMonitor, PerformanceMetrics } from '../components/monitoring';
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 
-export interface MonitoringPageProps {}
+export const MonitoringPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('cluster');
+  const [timeRange, setTimeRange] = useState<'1h' | '6h' | '24h' | '7d'>('24h');
 
-const MonitoringPage: React.FC<MonitoringPageProps> = () => {
-  const { clearBreadcrumbs } = useBreadcrumb();
-  
-  // Clear breadcrumbs when component mounts
-  useEffect(() => {
-    clearBreadcrumbs();
-  }, [clearBreadcrumbs]);
+  const { setBreadcrumbs } = useBreadcrumb();
+
+  React.useEffect(() => {
+    setBreadcrumbs([
+      { title: 'Home', href: '/' },
+      { title: 'Monitoring', href: '/monitoring' },
+    ]);
+  }, [setBreadcrumbs]);
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
-      </div>
-      <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold mb-4">Monitoring</h1>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">System Monitoring</h1>
           <p className="text-muted-foreground">
-            Monitor cluster health and query performance.
+            Monitor cluster health, query performance, and system metrics
           </p>
         </div>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="cluster">Cluster Status</TabsTrigger>
+          <TabsTrigger value="queries">Query Monitor</TabsTrigger>
+          <TabsTrigger value="metrics">Performance Metrics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="cluster" className="space-y-6">
+          <ClusterStatus autoRefresh={true} refreshInterval={30000} />
+        </TabsContent>
+
+        <TabsContent value="queries" className="space-y-6">
+          <QueryMonitor autoRefresh={true} refreshInterval={5000} />
+        </TabsContent>
+
+        <TabsContent value="metrics" className="space-y-6">
+          <PerformanceMetrics 
+            timeRange={timeRange} 
+            onTimeRangeChange={(range) => setTimeRange(range as '1h' | '6h' | '24h' | '7d')} 
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
-
-export default MonitoringPage;
