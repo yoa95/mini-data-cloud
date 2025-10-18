@@ -17,11 +17,18 @@ export interface Column {
 }
 
 export interface QueryResult {
-  columns: string[];
-  rows: any[][];
-  totalRows: number;
-  executionTime: number;
   queryId: string;
+  status: string;
+  submittedAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  executionTimeMs: number;
+  rowsReturned: number;
+  errorMessage?: string;
+  resultLocation: string;
+  columns: string[];
+  rows: unknown[][];
+  resultDescription?: string;
 }
 
 export interface QueryRequest {
@@ -76,6 +83,26 @@ export interface TableInfo {
   lastModified: Date;
 }
 
+export interface SampleData {
+  columns: string[];
+  rows: unknown[][];
+  totalRows: number;
+  sampleSize: number;
+}
+
+// Backend response types (what the API actually returns)
+export interface BackendTableResponse {
+  namespaceName: string;
+  tableName: string;
+  tableLocation: string;
+  tableFormat: string;
+  rowCount: number;
+  dataSizeBytes: number;
+  createdAt: string;
+  updatedAt: string;
+  fullTableName: string;
+}
+
 // API Response wrapper types
 export interface ApiResponse<T> {
   success: boolean;
@@ -88,12 +115,12 @@ export interface ApiResponse<T> {
 export interface ApiError {
   message: string;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export class MiniCloudApiError extends Error {
   public code?: string;
-  public details?: any;
+  public details?: unknown;
 
   constructor(message: string, code?: string, details?: unknown) {
     super(message);

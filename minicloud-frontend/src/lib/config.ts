@@ -40,9 +40,11 @@ export const API_ENDPOINTS = {
   // Metadata endpoints
   TABLES: "/api/v1/metadata/tables",
   TABLE_DETAILS: (tableName: string) => `/api/v1/metadata/tables/${tableName}`,
+  TABLE_SAMPLE: (tableName: string, limit?: number) => 
+    `/api/v1/metadata/tables/${tableName}/sample${limit ? `?limit=${limit}` : ''}`,
 
   // Query endpoints
-  EXECUTE_QUERY: "/api/v1/queries/execute",
+  EXECUTE_QUERY: "/api/v1/queries",
   QUERY_HISTORY: "/api/v1/queries/history",
 
   // Monitoring endpoints

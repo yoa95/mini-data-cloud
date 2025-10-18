@@ -143,7 +143,7 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
           <div className="space-y-3">
             {uploads.map((upload) => (
               <div
-                key={upload.id}
+                key={upload.fileName}
                 className={cn("flex items-center gap-3 p-3 rounded-lg border", {
                   "bg-green-50 border-green-200": upload.status === "completed",
                   "bg-red-50 border-red-200": upload.status === "error",

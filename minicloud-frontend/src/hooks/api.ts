@@ -33,6 +33,15 @@ export const useTable = (tableName: string) => {
   });
 };
 
+export const useTableSample = (tableName: string, limit: number = 10) => {
+  return useQuery({
+    queryKey: [...queryKeys.table(tableName), 'sample', limit],
+    queryFn: () => api.tables.getSample(tableName, limit),
+    enabled: Boolean(tableName),
+    staleTime: 10 * 60 * 1000, // 10 minutes - sample data doesn't change often
+  });
+};
+
 // Query hooks
 export const useExecuteQuery = () => {
   const queryClient = useQueryClient();
