@@ -15,6 +15,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { UploadPage, TablesPage, QueryPage, MonitoringPage } from './pages';
+import { AppProviders } from './providers/AppProviders';
 
 // Breadcrumb mapping for different routes
 const breadcrumbMap: Record<string, { title: string; parent?: string }> = {
@@ -70,9 +71,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <AppProviders>
+      <Router>
+        <AppContent />
+      </Router>
+    </AppProviders>
   );
 }
 
