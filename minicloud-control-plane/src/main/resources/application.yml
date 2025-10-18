@@ -5,6 +5,13 @@ spring:
   application:
     name: minicloud-control-plane
   
+  # Multipart file upload configuration
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
+  
   # H2 Database configuration
   datasource:
     url: jdbc:h2:mem:minicloud;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE

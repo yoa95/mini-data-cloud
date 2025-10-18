@@ -8,7 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 /**
@@ -24,6 +30,77 @@ public class DataLoadingController {
     @Autowired
     private DataLoadingService dataLoadingService;
     
+    /**
+     * Upload and load CSV file
+     */
+    @PostMapping(value = "/upload", consumes = "multipart/form-data")
+    public ResponseEntity<UploadResponse> uploadCsvFile(@RequestParam("file") MultipartFile file) {
+        logger.info("Received file upload request: {}", file.getOriginalFilename());
+        
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(new UploadResponse(
+                false, null, "File is empty", null
+            ));
+        }
+        
+        // Validate file type
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".csv")) {
+            return ResponseEntity.badRequest().body(new UploadResponse(
+                false, null, "Only CSV files are allowed", null
+            ));
+        }
+        
+        try {
+            // Create temp directory if it doesn't exist
+            Path tempDir = Paths.get("./temp");
+            if (!Files.exists(tempDir)) {
+                Files.createDirectories(tempDir);
+            }
+            
+            // Save uploaded file to temp directory
+            String filename = System.currentTimeMillis() + "_" + originalFilename;
+            Path tempFile = tempDir.resolve(filename);
+            Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+            
+            // Extract table name from filename (remove extension)
+            String tableName = originalFilename.substring(0, originalFilename.lastIndexOf('.'));
+            // Clean table name (replace spaces and special chars with underscores)
+            tableName = tableName.replaceAll("[^a-zA-Z0-9_]", "_").toLowerCase();
+            
+            // Load the CSV data
+            DataLoadingService.LoadResult result = dataLoadingService.loadCsvData(
+                tempFile.toString(),
+                "default", // Use default namespace
+                tableName,
+                true // Assume header is present
+            );
+            
+            // Clean up temp file
+            Files.deleteIfExists(tempFile);
+            
+            UploadResponse response = new UploadResponse(
+                true,
+                result.getTableName(),
+                "File uploaded and processed successfully",
+                null
+            );
+            
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            
+        } catch (IOException e) {
+            logger.error("Error handling file upload", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new UploadResponse(
+                false, null, "Error processing file: " + e.getMessage(), null
+            ));
+        } catch (Exception e) {
+            logger.error("Error loading CSV data from uploaded file", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new UploadResponse(
+                false, null, "Error loading data: " + e.getMessage(), null
+            ));
+        }
+    }
+
     /**
      * Load CSV data into a table
      */
@@ -218,5 +295,28 @@ public class DataLoadingController {
         public int getFileCount() { return fileCount; }
         public int getColumnCount() { return columnCount; }
         public String getTableLocation() { return tableLocation; }
+    }
+    
+    /**
+     * Response DTO for file upload operations
+     */
+    public static class UploadResponse {
+        private final boolean success;
+        private final String tableName;
+        private final String message;
+        private final String error;
+        
+        public UploadResponse(boolean success, String tableName, String message, String error) {
+            this.success = success;
+            this.tableName = tableName;
+            this.message = message;
+            this.error = error;
+        }
+        
+        // Getters
+        public boolean isSuccess() { return success; }
+        public String getTableName() { return tableName; }
+        public String getMessage() { return message; }
+        public String getError() { return error; }
     }
 }

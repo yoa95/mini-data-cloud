@@ -9,7 +9,7 @@ export interface ApiConfig {
 
 // Default configuration
 const defaultConfig: ApiConfig = {
-  baseUrl: 'http://localhost:8080',
+  baseUrl: import.meta.env.DEV ? "" : "http://localhost:8080", // Use proxy in dev, direct in prod
   timeout: 30000, // 30 seconds
   retryAttempts: 3,
   retryDelay: 1000, // 1 second
@@ -19,29 +19,36 @@ const defaultConfig: ApiConfig = {
 export const getApiConfig = (): ApiConfig => {
   return {
     baseUrl: import.meta.env.VITE_API_BASE_URL || defaultConfig.baseUrl,
-    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || String(defaultConfig.timeout)),
-    retryAttempts: parseInt(import.meta.env.VITE_API_RETRY_ATTEMPTS || String(defaultConfig.retryAttempts)),
-    retryDelay: parseInt(import.meta.env.VITE_API_RETRY_DELAY || String(defaultConfig.retryDelay)),
+    timeout: parseInt(
+      import.meta.env.VITE_API_TIMEOUT || String(defaultConfig.timeout)
+    ),
+    retryAttempts: parseInt(
+      import.meta.env.VITE_API_RETRY_ATTEMPTS ||
+        String(defaultConfig.retryAttempts)
+    ),
+    retryDelay: parseInt(
+      import.meta.env.VITE_API_RETRY_DELAY || String(defaultConfig.retryDelay)
+    ),
   };
 };
 
 // API endpoints
 export const API_ENDPOINTS = {
   // Data loading endpoints
-  UPLOAD_FILE: '/api/data/upload',
-  
+  UPLOAD_FILE: "/api/v1/data/upload",
+
   // Metadata endpoints
-  TABLES: '/api/metadata/tables',
-  TABLE_DETAILS: (tableName: string) => `/api/metadata/tables/${tableName}`,
-  
+  TABLES: "/api/v1/metadata/tables",
+  TABLE_DETAILS: (tableName: string) => `/api/v1/metadata/tables/${tableName}`,
+
   // Query endpoints
-  EXECUTE_QUERY: '/api/query/execute',
-  QUERY_HISTORY: '/api/query/history',
-  
+  EXECUTE_QUERY: "/api/v1/queries/execute",
+  QUERY_HISTORY: "/api/v1/queries/history",
+
   // Monitoring endpoints
-  CLUSTER_STATUS: '/api/monitoring/cluster',
-  WORKER_STATUS: '/api/monitoring/workers',
-  
+  CLUSTER_STATUS: "/api/v1/monitoring/cluster",
+  WORKER_STATUS: "/api/v1/monitoring/workers",
+
   // Health check
-  HEALTH: '/api/health',
+  HEALTH: "/api/health",
 } as const;

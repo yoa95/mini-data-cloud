@@ -202,17 +202,53 @@ class HttpClient {
   async uploadFile(
     endpoint: string,
     file: File,
-    _onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void
   ): Promise<Response> {
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
     const formData = new FormData();
     formData.append('file', file);
 
-    // For progress tracking, we need to use a different approach
-    // This is a simplified version - for full progress support, consider using a library
-    return this.request(endpoint, {
-      method: 'POST',
-      body: formData,
-      headers: {}, // Let browser set Content-Type for FormData
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      // Track upload progress
+      if (onProgress) {
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const progress = Math.round((event.loaded / event.total) * 100);
+            onProgress(progress);
+          }
+        });
+      }
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          // Create a Response-like object for consistency
+          const response = new Response(xhr.responseText, {
+            status: xhr.status,
+            statusText: xhr.statusText,
+            headers: new Headers(),
+          });
+          resolve(response);
+        } else {
+          reject(new MiniCloudApiError(
+            `HTTP ${xhr.status}: ${xhr.statusText}`,
+            `HTTP_${xhr.status}`
+          ));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new MiniCloudApiError('Network error', 'NETWORK_ERROR'));
+      });
+
+      xhr.addEventListener('timeout', () => {
+        reject(new MiniCloudApiError('Request timeout', 'TIMEOUT'));
+      });
+
+      xhr.open('POST', url);
+      xhr.timeout = this.defaultTimeout;
+      xhr.send(formData);
     });
   }
 }

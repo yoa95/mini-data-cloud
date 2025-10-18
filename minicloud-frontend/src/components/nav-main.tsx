@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/collapsible"
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -37,7 +36,7 @@ export function NavMain({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Mini Data Cloud</SidebarGroupLabel>
+      {/* <SidebarGroupLabel>Mini Data Cloud</SidebarGroupLabel> */}
       <SidebarMenu>
         {items.map((item) => {
           const isCurrentPath = location.pathname === item.url
