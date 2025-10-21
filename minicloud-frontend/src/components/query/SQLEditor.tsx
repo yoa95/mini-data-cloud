@@ -1,10 +1,10 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { Textarea } from '../ui/textarea';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Play, Save, History, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useRef, useCallback, useEffect, useState } from "react";
+import { Textarea } from "../ui/textarea";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Play, Save, History, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface SQLEditorProps {
   value: string;
@@ -27,117 +27,166 @@ const SQLEditor: React.FC<SQLEditorProps> = ({
   isExecuting = false,
   availableTables = [],
   availableColumns = {},
-  className
+  className,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [cursorPosition, setCursorPosition] = useState(0);
 
-  // Handle keyboard shortcuts
-  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Ctrl+Enter or Cmd+Enter to execute query
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-      event.preventDefault();
-      if (value.trim() && !isExecuting) {
-        onExecute(value);
-      }
-    }
+  // Accept a suggestion
+  const acceptSuggestion = useCallback(
+    (suggestion: string) => {
+      if (!textareaRef.current) return;
 
-    // Ctrl+S or Cmd+S to save query
-    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-      event.preventDefault();
-      if (onSave && value.trim()) {
-        onSave(value);
-      }
-    }
+      const textarea = textareaRef.current;
+      const textBeforeCursor = value.substring(0, cursorPosition);
+      const textAfterCursor = value.substring(cursorPosition);
+      const words = textBeforeCursor.split(/\s+/);
+      const currentWord = words[words.length - 1] || "";
 
-    // Escape to hide suggestions
-    if (event.key === 'Escape') {
+      // Replace the current word with the suggestion
+      const beforeCurrentWord = textBeforeCursor.substring(
+        0,
+        textBeforeCursor.lastIndexOf(currentWord)
+      );
+      const newValue = beforeCurrentWord + suggestion + textAfterCursor;
+
+      onChange(newValue);
       setShowSuggestions(false);
-    }
 
-    // Tab to accept first suggestion
-    if (event.key === 'Tab' && showSuggestions && suggestions.length > 0) {
-      event.preventDefault();
-      acceptSuggestion(suggestions[0]);
-    }
-  }, [value, onExecute, onSave, isExecuting, showSuggestions, suggestions]);
+      // Set cursor position after the suggestion
+      setTimeout(() => {
+        const newCursorPos = beforeCurrentWord.length + suggestion.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+        textarea.focus();
+      }, 0);
+    },
+    [value, cursorPosition, onChange]
+  );
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Ctrl+Enter or Cmd+Enter to execute query
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        if (value.trim() && !isExecuting) {
+          // Clean up SQL by removing trailing semicolons and whitespace
+          const cleanedSql = value.trim().replace(/;+\s*$/, "");
+          onExecute(cleanedSql);
+        }
+      }
+
+      // Ctrl+S or Cmd+S to save query
+      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+        event.preventDefault();
+        if (onSave && value.trim()) {
+          onSave(value);
+        }
+      }
+
+      // Escape to hide suggestions
+      if (event.key === "Escape") {
+        setShowSuggestions(false);
+      }
+
+      // Tab to accept first suggestion
+      if (event.key === "Tab" && showSuggestions && suggestions.length > 0) {
+        event.preventDefault();
+        // Handle suggestion acceptance inline to avoid dependency issues
+        if (textareaRef.current && suggestions.length > 0) {
+          const suggestion = suggestions[0];
+          const textarea = textareaRef.current;
+          const textBeforeCursor = value.substring(0, cursorPosition);
+          const textAfterCursor = value.substring(cursorPosition);
+          const words = textBeforeCursor.split(/\s+/);
+          const currentWord = words[words.length - 1] || "";
+
+          const beforeCurrentWord = textBeforeCursor.substring(
+            0,
+            textBeforeCursor.lastIndexOf(currentWord)
+          );
+          const newValue = beforeCurrentWord + suggestion + textAfterCursor;
+
+          onChange(newValue);
+          setShowSuggestions(false);
+
+          setTimeout(() => {
+            const newCursorPos = beforeCurrentWord.length + suggestion.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+            textarea.focus();
+          }, 0);
+        }
+      }
+    },
+    [
+      showSuggestions,
+      suggestions,
+      value,
+      isExecuting,
+      onExecute,
+      onSave,
+      cursorPosition,
+      onChange,
+    ]
+  );
 
   // Handle input changes and auto-completion
-  const handleInputChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = event.target.value;
-    const cursorPos = event.target.selectionStart;
-    
-    onChange(newValue);
-    setCursorPosition(cursorPos);
+  const handleInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newValue = event.target.value;
+      const cursorPos = event.target.selectionStart;
 
-    // Simple auto-completion logic
-    const textBeforeCursor = newValue.substring(0, cursorPos);
-    const words = textBeforeCursor.split(/\s+/);
-    const currentWord = words[words.length - 1]?.toLowerCase() || '';
+      onChange(newValue);
+      setCursorPosition(cursorPos);
 
-    if (currentWord.length >= 2) {
-      const tableSuggestions = availableTables.filter(table => 
-        table.toLowerCase().includes(currentWord)
-      );
+      // Simple auto-completion logic
+      const textBeforeCursor = newValue.substring(0, cursorPos);
+      const words = textBeforeCursor.split(/\s+/);
+      const currentWord = words[words.length - 1]?.toLowerCase() || "";
 
-      // Check if we're after FROM or JOIN keywords for table suggestions
-      const beforeCurrentWord = textBeforeCursor.substring(0, textBeforeCursor.lastIndexOf(currentWord));
-      const isAfterFrom = /\b(from|join)\s*$/i.test(beforeCurrentWord);
-      
-      if (isAfterFrom && tableSuggestions.length > 0) {
-        setSuggestions(tableSuggestions);
-        setShowSuggestions(true);
-      } else {
-        // Check for column suggestions after table name
-        const tableMatch = beforeCurrentWord.match(/\b(\w+)\.\s*$/);
-        if (tableMatch) {
-          const tableName = tableMatch[1];
-          const columns = availableColumns[tableName] || [];
-          const columnSuggestions = columns.filter(col => 
-            col.toLowerCase().includes(currentWord)
-          );
-          
-          if (columnSuggestions.length > 0) {
-            setSuggestions(columnSuggestions);
-            setShowSuggestions(true);
+      if (currentWord.length >= 2) {
+        const tableSuggestions = availableTables.filter((table) =>
+          table.toLowerCase().includes(currentWord)
+        );
+
+        // Check if we're after FROM or JOIN keywords for table suggestions
+        const beforeCurrentWord = textBeforeCursor.substring(
+          0,
+          textBeforeCursor.lastIndexOf(currentWord)
+        );
+        const isAfterFrom = /\b(from|join)\s*$/i.test(beforeCurrentWord);
+
+        if (isAfterFrom && tableSuggestions.length > 0) {
+          setSuggestions(tableSuggestions);
+          setShowSuggestions(true);
+        } else {
+          // Check for column suggestions after table name
+          const tableMatch = beforeCurrentWord.match(/\b(\w+)\.\s*$/);
+          if (tableMatch) {
+            const tableName = tableMatch[1];
+            const columns = availableColumns[tableName] || [];
+            const columnSuggestions = columns.filter((col) =>
+              col.toLowerCase().includes(currentWord)
+            );
+
+            if (columnSuggestions.length > 0) {
+              setSuggestions(columnSuggestions);
+              setShowSuggestions(true);
+            } else {
+              setShowSuggestions(false);
+            }
           } else {
             setShowSuggestions(false);
           }
-        } else {
-          setShowSuggestions(false);
         }
+      } else {
+        setShowSuggestions(false);
       }
-    } else {
-      setShowSuggestions(false);
-    }
-  }, [onChange, availableTables, availableColumns]);
-
-  // Accept a suggestion
-  const acceptSuggestion = useCallback((suggestion: string) => {
-    if (!textareaRef.current) return;
-
-    const textarea = textareaRef.current;
-    const textBeforeCursor = value.substring(0, cursorPosition);
-    const textAfterCursor = value.substring(cursorPosition);
-    const words = textBeforeCursor.split(/\s+/);
-    const currentWord = words[words.length - 1] || '';
-    
-    // Replace the current word with the suggestion
-    const beforeCurrentWord = textBeforeCursor.substring(0, textBeforeCursor.lastIndexOf(currentWord));
-    const newValue = beforeCurrentWord + suggestion + textAfterCursor;
-    
-    onChange(newValue);
-    setShowSuggestions(false);
-
-    // Set cursor position after the suggestion
-    setTimeout(() => {
-      const newCursorPos = beforeCurrentWord.length + suggestion.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-      textarea.focus();
-    }, 0);
-  }, [value, cursorPosition, onChange]);
+    },
+    [onChange, availableTables, availableColumns]
+  );
 
   // Focus the textarea when component mounts
   useEffect(() => {
@@ -174,7 +223,7 @@ const SQLEditor: React.FC<SQLEditorProps> = ({
             className="min-h-[200px] font-mono text-sm resize-y"
             disabled={isExecuting}
           />
-          
+
           {/* Auto-completion suggestions */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 z-10 mt-1 bg-popover border border-border rounded-md shadow-md max-h-40 overflow-y-auto">
@@ -194,7 +243,11 @@ const SQLEditor: React.FC<SQLEditorProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => onExecute(value)}
+              onClick={() => {
+                // Clean up SQL by removing trailing semicolons and whitespace
+                const cleanedSql = value.trim().replace(/;+\s*$/, "");
+                onExecute(cleanedSql);
+              }}
               disabled={!value.trim() || isExecuting}
               size="sm"
             >
@@ -210,7 +263,7 @@ const SQLEditor: React.FC<SQLEditorProps> = ({
                 </>
               )}
             </Button>
-            
+
             {onSave && (
               <Button
                 variant="outline"
@@ -225,11 +278,7 @@ const SQLEditor: React.FC<SQLEditorProps> = ({
           </div>
 
           {onShowHistory && (
-            <Button
-              variant="ghost"
-              onClick={onShowHistory}
-              size="sm"
-            >
+            <Button variant="ghost" onClick={onShowHistory} size="sm">
               <History className="h-4 w-4 mr-2" />
               History
             </Button>
@@ -239,8 +288,8 @@ const SQLEditor: React.FC<SQLEditorProps> = ({
         {/* Available tables info */}
         {availableTables.length > 0 && (
           <div className="text-xs text-muted-foreground">
-            <span className="font-medium">Available tables:</span>{' '}
-            {availableTables.join(', ')}
+            <span className="font-medium">Available tables:</span>{" "}
+            {availableTables.join(", ")}
           </div>
         )}
       </CardContent>

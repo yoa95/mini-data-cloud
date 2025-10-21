@@ -71,7 +71,7 @@ const QueryResults: React.FC<QueryResultsProps> = ({
 
   // Filter and sort data
   const processedData = useMemo(() => {
-    if (!result?.rows) return [];
+    if (!result?.rows || !result?.columns) return [];
 
     let filteredData = [...result.rows];
 
@@ -95,7 +95,7 @@ const QueryResults: React.FC<QueryResultsProps> = ({
     });
 
     // Apply sorting
-    if (sortConfig) {
+    if (sortConfig && result.columns) {
       const columnIndex = result.columns.indexOf(sortConfig.column);
       if (columnIndex !== -1) {
         filteredData.sort((a, b) => {
@@ -289,8 +289,8 @@ const QueryResults: React.FC<QueryResultsProps> = ({
     );
   }
 
-  // No results
-  if (!result) {
+  // No results or invalid result structure
+  if (!result || !result.columns) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -298,7 +298,7 @@ const QueryResults: React.FC<QueryResultsProps> = ({
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
-            Execute a query to see results here
+            {!result ? "Execute a query to see results here" : "Invalid query result format"}
           </div>
         </CardContent>
       </Card>
@@ -423,7 +423,7 @@ const QueryResults: React.FC<QueryResultsProps> = ({
             <TableBody>
               {currentPageData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={result.columns.length} className="text-center py-8">
+                  <TableCell colSpan={result.columns?.length || 1} className="text-center py-8">
                     No results found
                   </TableCell>
                 </TableRow>

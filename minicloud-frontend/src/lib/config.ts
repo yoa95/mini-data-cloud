@@ -45,7 +45,7 @@ export const API_ENDPOINTS = {
 
   // Query endpoints
   EXECUTE_QUERY: "/api/v1/queries",
-  QUERY_HISTORY: "/api/v1/queries/history",
+  QUERY_HISTORY: "/api/v1/queries",
 
   // Monitoring endpoints
   CLUSTER_STATUS: "/api/v1/monitoring/cluster",

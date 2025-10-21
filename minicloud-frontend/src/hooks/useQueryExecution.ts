@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { apiClient } from '../lib/api-client';
+import { api } from '../lib/api';
 import type { QueryResult, QueryHistoryItem } from '../types/api';
 
 export interface UseQueryExecutionReturn {
@@ -34,7 +34,7 @@ export const useQueryExecution = (): UseQueryExecutionReturn => {
   const loadQueryHistory = useCallback(async () => {
     try {
       setIsLoadingHistory(true);
-      const history = await apiClient.getQueryHistory();
+      const history = await api.query.getHistory();
       setQueryHistory(history);
       
       // Load favorites from localStorage (in a real app, this might come from the API)
@@ -60,11 +60,16 @@ export const useQueryExecution = (): UseQueryExecutionReturn => {
     setQueryResult(null);
 
     try {
-      const result = await apiClient.executeQuery({ sql });
+      const result = await api.query.execute({ sql });
       setQueryResult(result);
       
-      // Refresh query history to include the new query
-      await loadQueryHistory();
+      // Try to refresh query history, but don't let it fail the query execution
+      try {
+        await loadQueryHistory();
+      } catch (historyError) {
+        console.warn('Failed to refresh query history:', historyError);
+        // Don't propagate this error - query execution was successful
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setExecutionError(errorMessage);

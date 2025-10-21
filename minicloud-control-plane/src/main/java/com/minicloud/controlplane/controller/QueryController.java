@@ -53,7 +53,7 @@ public class QueryController {
      * Get query status and details
      */
     @GetMapping("/{queryId}")
-    public ResponseEntity<QueryResponse> getQueryStatus(@PathVariable String queryId) {
+    public ResponseEntity<QueryResponse> getQueryStatus(@PathVariable("queryId") String queryId) {
         logger.debug("Getting status for query: {}", queryId);
         
         Optional<QueryResponse> response = queryService.getQueryStatus(queryId);
@@ -69,7 +69,7 @@ public class QueryController {
      */
     @GetMapping
     public ResponseEntity<List<QueryResponse>> getRecentQueries(
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(name = "limit", defaultValue = "10") int limit) {
         logger.debug("Getting {} recent queries", limit);
         
         try {
@@ -101,7 +101,7 @@ public class QueryController {
      * Cancel a query
      */
     @DeleteMapping("/{queryId}")
-    public ResponseEntity<Void> cancelQuery(@PathVariable String queryId) {
+    public ResponseEntity<Void> cancelQuery(@PathVariable("queryId") String queryId) {
         logger.info("Cancelling query: {}", queryId);
         
         try {
@@ -173,7 +173,7 @@ public class QueryController {
      * Get query results data
      */
     @GetMapping("/{queryId}/results")
-    public ResponseEntity<QueryResultService.QueryResult> getQueryResults(@PathVariable String queryId) {
+    public ResponseEntity<QueryResultService.QueryResult> getQueryResults(@PathVariable("queryId") String queryId) {
         logger.debug("Getting results for query: {}", queryId);
         
         try {
@@ -193,7 +193,7 @@ public class QueryController {
      * Check if query results are available
      */
     @GetMapping("/{queryId}/results/available")
-    public ResponseEntity<Map<String, Boolean>> checkResultsAvailable(@PathVariable String queryId) {
+    public ResponseEntity<Map<String, Boolean>> checkResultsAvailable(@PathVariable("queryId") String queryId) {
         logger.debug("Checking if results are available for query: {}", queryId);
         
         try {
